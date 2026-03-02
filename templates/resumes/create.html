@@ -2,76 +2,619 @@
 {% block title %}Create Resume{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-6">
-    <div class="w-full max-w-xl animate-slide-up">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-white mb-2">Create New Resume</h1>
-            <p class="text-dark-400">Choose a template and name your resume</p>
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+    <div class="w-full max-w-6xl animate-slide-up">
+
+        <div class="text-center mb-10">
+            <h1
+                class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400 mb-3 tracking-tight">
+                Create Your Resume</h1>
+            <p class="text-dark-400 text-lg max-w-xl mx-auto">Select a professionally designed base template. You can
+                always change your template later without losing any content.</p>
         </div>
 
-        <form method="post" class="space-y-6">
+        <form method="post" class="space-y-8">
             {% csrf_token %}
 
-            <div class="card">
-                <label class="block text-sm font-medium text-dark-300 mb-2">Resume Title</label>
-                <input type="text" name="title" value="My Resume" required class="form-input text-lg"
-                    placeholder="e.g. Software Engineer Resume">
-            </div>
-
-            <div class="card">
-                <label class="block text-sm font-medium text-dark-300 mb-4">Choose Template</label>
-                <div class="grid grid-cols-1 gap-3">
-                    <label
-                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
-                        <input type="radio" name="template" value="modern_ats_clean" checked
-                            class="w-4 h-4 text-primary-500">
-                        <div>
-                            <p class="text-white font-medium text-sm">Modern ATS Clean</p>
-                            <p class="text-dark-400 text-xs">Clean, professional, ATS-friendly — best for most jobs</p>
-                        </div>
-                    </label>
-                    <label
-                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
-                        <input type="radio" name="template" value="minimal_academic" class="w-4 h-4 text-primary-500">
-                        <div>
-                            <p class="text-white font-medium text-sm">Minimal Academic</p>
-                            <p class="text-dark-400 text-xs">Minimalist style for academic & research positions</p>
-                        </div>
-                    </label>
-                    <label
-                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
-                        <input type="radio" name="template" value="corporate_executive"
-                            class="w-4 h-4 text-primary-500">
-                        <div>
-                            <p class="text-white font-medium text-sm">Corporate Executive</p>
-                            <p class="text-dark-400 text-xs">Executive style for senior & management roles</p>
-                        </div>
-                    </label>
-                    <label
-                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
-                        <input type="radio" name="template" value="creative_designer" class="w-4 h-4 text-primary-500">
-                        <div>
-                            <p class="text-white font-medium text-sm">Creative Designer</p>
-                            <p class="text-dark-400 text-xs">Creative flair for design & marketing roles</p>
-                        </div>
-                    </label>
-                    <label
-                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
-                        <input type="radio" name="template" value="technical_developer"
-                            class="w-4 h-4 text-primary-500">
-                        <div>
-                            <p class="text-white font-medium text-sm">Technical Developer</p>
-                            <p class="text-dark-400 text-xs">Optimized for software engineering & tech roles</p>
-                        </div>
-                    </label>
+            <div
+                class="card p-6 bg-dark-800/80 border-dark-600/50 shadow-2xl backdrop-blur-xl relative overflow-hidden text-center max-w-2xl mx-auto">
+                <div class="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-accent-500/5 pointer-events-none">
+                </div>
+                <label
+                    class="block text-sm font-semibold tracking-wider text-dark-300 uppercase mb-3 text-center relative z-10">Give
+                    your resume a title</label>
+                <div class="relative z-10 w-full max-w-sm mx-auto">
+                    <input type="text" name="title" value="My Resume" required
+                        class="form-input text-lg text-center font-medium placeholder:font-normal placeholder:text-dark-500 bg-dark-900/50 border-dark-600/80 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all rounded-xl py-3 shadow-inner"
+                        placeholder="e.g. Senior Software Engineer">
                 </div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <a href="{% url 'dashboard' %}" class="btn-secondary">Cancel</a>
-                <button type="submit" class="btn-primary px-8 py-2.5">Create Resume →</button>
+            <div class="w-full">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-5 gap-4">
+                    <label class="block text-sm font-semibold tracking-wider text-dark-300 uppercase">Select
+                        Template Style</label>
+                    <div class="relative w-full md:w-80">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-dark-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <input type="text" id="templateSearch"
+                            class="form-input block w-full pl-10 py-2 sm:text-sm border-dark-600/50 bg-dark-900/50 text-white rounded-xl focus:ring-primary-500 focus:border-primary-500 shadow-inner transition-all placeholder:text-dark-500"
+                            placeholder="Search templates... (e.g. Modern, Medical)">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6" id="templateGrid">
+
+                    <!-- Modern ATS -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="modern_ats_clean" class="peer sr-only" checked>
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-white rounded shadow-sm p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-1/2 h-2.5 bg-[#000080] rounded mx-auto mb-1"></div>
+                                    <div class="w-1/3 h-1.5 bg-slate-400 rounded mx-auto mb-0.5"></div>
+                                    <div class="w-2/3 h-1 bg-slate-500 rounded mx-auto mb-2"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/3 h-1.5 bg-[#000080] rounded mb-0.5"></div>
+                                        <div class="w-full h-0.5 bg-[#000080] mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-300 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-1">
+                                        <div class="w-1/4 h-1.5 bg-[#000080] rounded mb-0.5"></div>
+                                        <div class="w-full h-0.5 bg-[#000080] mb-1.5"></div>
+                                        <div class="flex justify-between mb-0.5">
+                                            <div class="w-1/3 h-1.5 bg-slate-600 rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                        </div>
+                                        <div class="flex gap-1.5 pl-2 mb-0.5">
+                                            <div class="w-1 h-1 rounded-full bg-slate-400 shrink-0 self-center"></div>
+                                            <div class="w-full h-1 bg-slate-300 rounded self-center"></div>
+                                        </div>
+                                        <div class="flex gap-1.5 pl-2 mb-0.5">
+                                            <div class="w-1 h-1 rounded-full bg-slate-400 shrink-0 self-center"></div>
+                                            <div class="w-[85%] h-1 bg-slate-300 rounded self-center"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Modern ATS Cle<span
+                                        class="opacity-0">a</span>n</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Clean, highly legible layout perfect
+                                    for automated resume scanners.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Minimal Academic -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="minimal_academic" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-[#fcfcfc] rounded shadow border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-3/4 h-2.5 bg-slate-800 rounded mx-auto mb-1"></div>
+                                    <div class="w-1/2 h-1.5 bg-slate-600 rounded mx-auto mb-1"></div>
+                                    <div class="w-full flex justify-center gap-2 mb-0.5">
+                                        <div class="w-1/4 h-1 bg-slate-500 rounded"></div>
+                                        <div class="w-px h-1 bg-slate-300"></div>
+                                        <div class="w-1/5 h-1 bg-slate-500 rounded"></div>
+                                    </div>
+                                    <div class="w-full flex justify-center gap-2 mb-3">
+                                        <div class="w-1/5 h-1 bg-slate-500 rounded"></div>
+                                        <div class="w-px h-1 bg-slate-300"></div>
+                                        <div class="w-1/6 h-1 bg-slate-500 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/4 h-1.5 bg-slate-800 rounded mb-1"></div>
+                                        <div class="w-full h-[0.5px] bg-slate-800 mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-300 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-1.5">
+                                        <div class="w-1/5 h-1.5 bg-slate-800 rounded mb-1"></div>
+                                        <div class="w-full h-[0.5px] bg-slate-800 mb-1.5"></div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/3 h-1.5 bg-slate-700 rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-500 rounded"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Minimal Academic</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Classic, structured styling ideal for
+                                    research & academic roles.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Corporate Executive -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="corporate_executive" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-slate-50 rounded shadow border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-3/4 h-3 bg-[#2C2C2C] rounded mx-auto mb-1.5"></div>
+                                    <div class="w-1/2 h-2 bg-[#228B22] rounded mx-auto mb-1"></div>
+                                    <div class="w-4/5 h-1 bg-slate-500 rounded mx-auto mb-3"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/3 h-2 bg-[#228B22] rounded mb-1"></div>
+                                        <div class="w-full h-1 bg-[#228B22] mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-400 rounded mb-1"></div>
+                                        <div class="w-[90%] h-1 bg-slate-400 rounded mb-1"></div>
+                                        <div class="w-3/4 h-1 bg-slate-400 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-2/5 h-2 bg-[#228B22] rounded mb-1"></div>
+                                        <div class="w-full h-1 bg-[#228B22] mb-1.5"></div>
+                                        <div class="flex justify-between mb-1.5">
+                                            <div class="w-1/2 h-1.5 bg-[#2C2C2C] rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-500 rounded"></div>
+                                        </div>
+                                        <div class="flex gap-1.5 pl-2 mb-1">
+                                            <div class="w-1 h-1 rounded-full bg-slate-500 shrink-0 self-center"></div>
+                                            <div class="w-full h-1 bg-slate-400 rounded self-center"></div>
+                                        </div>
+                                        <div class="flex gap-1.5 pl-2 mb-1">
+                                            <div class="w-1 h-1 rounded-full bg-slate-500 shrink-0 self-center"></div>
+                                            <div class="w-[85%] h-1 bg-slate-400 rounded self-center"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Corporate Exec</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Authoritative and bold, designed for
+                                    senior & management roles.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Creative Designer -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="creative_designer" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-white rounded shadow-sm border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <div class="w-1/2 h-3 bg-[#008080] rounded"></div>
+                                        <div class="w-1/3 h-1.5 bg-[#333333] rounded"></div>
+                                    </div>
+                                    <div class="w-full h-1 bg-slate-500 rounded mb-1"></div>
+                                    <div class="w-full h-0.5 bg-[#333333] mb-2"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/3 h-3 bg-[#008080] mb-1.5 px-1 py-0.5">
+                                            <div class="w-3/4 h-full bg-white opacity-80 rounded text-transparent">
+                                            </div>
+                                        </div>
+                                        <div class="w-full h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-300 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-1/3 h-3 bg-[#008080] mb-1.5 px-1 py-0.5">
+                                            <div class="w-4/5 h-full bg-white opacity-80 rounded text-transparent">
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/3 h-1.5 bg-[#333333] rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                        </div>
+                                        <div class="w-[85%] h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-[95%] h-1 bg-slate-300 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Creative Designer</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Vibrant two-column flair, perfect for
+                                    design and marketing minds.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Technical Developer -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="technical_developer" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-[#2F3136] rounded shadow-sm border border-slate-700 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-2/3 h-2.5 bg-[#FFFFFF] rounded mb-1"></div>
+                                    <div class="w-1/2 h-1.5 bg-[#00468B] rounded mb-1"></div>
+                                    <div class="flex gap-2 mb-2">
+                                        <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                        <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                        <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                    </div>
+                                    <div class="w-full h-[0.5px] bg-[#00468B] mb-2"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/4 h-2 bg-[#FFFFFF] rounded mb-1.5"></div>
+                                        <div class="w-full h-1 bg-[#DCDDDE] rounded mb-1"></div>
+                                        <div class="w-[90%] h-1 bg-[#DCDDDE] rounded mb-1"></div>
+                                        <div class="w-3/4 h-1 bg-[#DCDDDE] rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-1/3 h-2 bg-[#FFFFFF] rounded mb-1.5"></div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/2 h-1.5 bg-[#FFFFFF] rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                        </div>
+                                        <div class="flex gap-1.5 pl-1 mb-1">
+                                            <div
+                                                class="w-[3px] h-1 shrink-0 self-center font-bold text-[#00468B] text-[8px] leading-[2px]">
+                                                ></div>
+                                            <div class="w-full h-1 bg-[#DCDDDE] rounded self-center"></div>
+                                        </div>
+                                        <div class="flex gap-1.5 pl-1 mb-1">
+                                            <div
+                                                class="w-[3px] h-1 shrink-0 self-center font-bold text-[#00468B] text-[8px] leading-[2px]">
+                                                ></div>
+                                            <div class="w-[85%] h-1 bg-[#DCDDDE] rounded self-center"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Tech Developer</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Code-like density and mono accents
+                                    specialized for engineers.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Startup Founder -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="startup_founder" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-slate-50 rounded shadow-sm border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-3/4 h-3 bg-[#1A365D] rounded mx-auto mb-1"></div>
+                                    <div class="w-1/2 h-2 bg-[#FF6B35] rounded mx-auto mb-2"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/3 h-1.5 bg-[#1A365D] rounded mb-0.5"></div>
+                                        <div class="w-full h-[1.5px] bg-[#FF6B35] mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-400 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-1/4 h-1.5 bg-[#1A365D] rounded mb-0.5"></div>
+                                        <div class="w-full h-[1.5px] bg-[#FF6B35] mb-1.5"></div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/3 h-1.5 bg-[#1A365D] rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-500 rounded"></div>
+                                        </div>
+                                        <div class="w-[85%] h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-[95%] h-1 bg-slate-400 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Startup Founder</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Sleek, modern design with an energetic
+                                    orange accent.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Data Scientist -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="data_scientist" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-white rounded shadow-sm border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="flex justify-between items-baseline mb-1">
+                                        <div class="w-1/2 h-3 bg-[#2B6CB0] rounded"></div>
+                                        <div class="w-1/3 h-1.5 bg-slate-500 rounded"></div>
+                                    </div>
+                                    <div class="flex justify-between w-full mb-2">
+                                        <div class="w-1/3 h-1 bg-slate-400 rounded"></div>
+                                        <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/3 h-1.5 bg-[#2B6CB0] rounded mb-0.5"></div>
+                                        <div class="w-full h-[0.5px] bg-[#2B6CB0] mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-400 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-2/5 h-1.5 bg-[#2B6CB0] rounded mb-0.5"></div>
+                                        <div class="w-full h-[0.5px] bg-[#2B6CB0] mb-1.5"></div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/2 h-1 bg-slate-600 rounded"></div>
+                                            <div class="w-1/5 h-1 bg-slate-500 rounded"></div>
+                                        </div>
+                                        <div class="w-[85%] h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-[95%] h-1 bg-slate-400 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Data Scientist</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Highly structured, analytical aesthetic
+                                    with light blue headers.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Marketing Pro -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="marketing_pro" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-white rounded shadow-sm border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-3/4 h-3 bg-[#805AD5] rounded mx-auto mb-1"></div>
+                                    <div class="w-1/2 h-2 bg-slate-800 rounded mx-auto mb-2"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-full h-3 bg-[#805AD5] mb-1.5 flex justify-center items-center">
+                                            <div class="w-1/3 h-1 bg-white opacity-80 rounded"></div>
+                                        </div>
+                                        <div class="w-full h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-300 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-full h-3 bg-[#805AD5] mb-1.5 flex justify-center items-center">
+                                            <div class="w-1/2 h-1 bg-white opacity-80 rounded"></div>
+                                        </div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/3 h-1.5 bg-slate-800 rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-400 rounded"></div>
+                                        </div>
+                                        <div class="w-[85%] h-1 bg-slate-300 rounded mb-0.5"></div>
+                                        <div class="w-[95%] h-1 bg-slate-300 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Marketing Pro</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Vibrant blocks of purple with centered,
+                                    expressive typography.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Legal Standard -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="legal_standard" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-[#fdfdfd] rounded shadow-sm border border-slate-300 p-5 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-1/2 h-2.5 bg-black mx-auto mb-1"></div>
+                                    <div class="w-1/3 h-1.5 bg-slate-800 mx-auto mb-2"></div>
+
+                                    <div class="w-full text-center mb-1">
+                                        <div class="w-1/3 h-1.5 bg-black mx-auto mb-1"></div>
+                                        <div class="w-full h-[0.5px] bg-black mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-400 mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-400 mb-0.5"></div>
+                                    </div>
+
+                                    <div class="w-full text-center mt-1">
+                                        <div class="w-2/5 h-1.5 bg-black mx-auto mb-1"></div>
+                                        <div class="w-full h-[0.5px] bg-black mb-1.5"></div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/3 h-1.5 bg-black"></div>
+                                        </div>
+                                        <div class="w-full text-left">
+                                            <div class="w-[85%] h-1 bg-slate-400 mb-0.5"></div>
+                                            <div class="w-[95%] h-1 bg-slate-400"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Legal Standard</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Classic, conservative black & white
+                                    aesthetic with serif touches.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Medical Clinical -->
+                    <label class="relative group cursor-pointer block h-full">
+                        <input type="radio" name="template" value="medical_clinical" class="peer sr-only">
+                        <div
+                            class="h-full border-2 border-dark-700/80 rounded-2xl overflow-hidden transition-all duration-300 peer-checked:border-primary-500 peer-checked:bg-primary-500/5 peer-checked:shadow-[0_0_25px_rgba(var(--color-primary-500),0.15)] hover:border-dark-500 bg-dark-800/60 flex flex-col hover:-translate-y-1">
+                            <div
+                                class="bg-dark-900/40 p-5 aspect-[1/1.414] overflow-hidden flex items-center justify-center border-b border-dark-700/50 relative group-hover:bg-dark-900/60 transition-colors">
+                                <div
+                                    class="w-full h-full bg-white rounded shadow-sm border border-slate-200 p-4 flex flex-col gap-2 transform origin-top group-hover:scale-[1.03] transition-transform duration-500">
+                                    <div class="w-1/2 h-3 bg-slate-900 rounded mb-1"></div>
+                                    <div class="w-1/3 h-1.5 bg-[#00A3C4] rounded mb-2"></div>
+
+                                    <div class="w-full">
+                                        <div class="w-1/3 h-1.5 bg-[#00A3C4] rounded mb-0.5"></div>
+                                        <div class="w-full h-[1.5px] bg-[#00A3C4] mb-1.5"></div>
+                                        <div class="w-full h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-[90%] h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-3/4 h-1 bg-slate-400 rounded"></div>
+                                    </div>
+
+                                    <div class="w-full mt-2">
+                                        <div class="w-2/5 h-1.5 bg-[#00A3C4] rounded mb-0.5"></div>
+                                        <div class="w-full h-[1.5px] bg-[#00A3C4] mb-1.5"></div>
+                                        <div class="flex justify-between mb-1">
+                                            <div class="w-1/3 h-1 bg-slate-800 rounded"></div>
+                                            <div class="w-1/4 h-1 bg-slate-500 rounded"></div>
+                                        </div>
+                                        <div class="w-[85%] h-1 bg-slate-400 rounded mb-0.5"></div>
+                                        <div class="w-[95%] h-1 bg-slate-400 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow relative z-10 border-t border-dark-700/50">
+                                <div
+                                    class="absolute -top-3.5 right-4 w-7 h-7 rounded-full border-2 border-dark-600 bg-dark-800 flex items-center justify-center shrink-0 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all shadow-md">
+                                    <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity scale-50 peer-checked:scale-100 duration-300"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <span class="text-white font-bold text-sm mb-1 mt-1">Medical Clinical</span>
+                                <p class="text-dark-400 text-xs leading-relaxed">Clean, precise styling with clinical
+                                    cyan accents.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-4 pt-6 mt-10">
+                <a href="{% url 'dashboard' %}" class="btn-secondary px-8 py-3 w-full sm:w-auto text-center">Cancel</a>
+                <button type="submit"
+                    class="btn-primary px-8 py-3 flex-grow sm:flex-grow-0 shadow-xl shadow-primary-500/20 group text-lg transition-transform hover:scale-105 active:scale-95">
+                    <span class="flex items-center justify-center gap-2">
+                        Get Started
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1.5 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </span>
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('templateSearch');
+        const grid = document.getElementById('templateGrid');
+        const cards = grid.querySelectorAll('label');
+
+        searchInput.addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+
+            cards.forEach(card => {
+                const title = card.querySelector('span').textContent.toLowerCase();
+                const desc = card.querySelector('p').textContent.toLowerCase();
+
+                if (title.includes(searchTerm) || desc.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

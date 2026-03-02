@@ -288,6 +288,288 @@ TEMPLATES = {
 
 \end{document}
 """,
+
+    'startup_founder': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[default]{sourcesanspro}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+
+\definecolor{primary}{HTML}{FF6B35}
+\definecolor{darkblue}{HTML}{1A365D}
+\definecolor{gray}{HTML}{4A5568}
+
+\hypersetup{colorlinks=true, urlcolor=primary, linkcolor=primary}
+
+\titleformat{\section}{\large\bfseries\color{darkblue}}{}{0em}{}[\color{primary}\vspace{-4pt}\rule{\linewidth}{2pt}\vspace{2pt}]
+\titlespacing{\section}{0pt}{12pt}{6pt}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=15pt}
+
+\begin{document}
+
+% ---- HEADER ----
+\begin{center}
+    {\Huge\bfseries\color{darkblue} {{NAME}}} \\[6pt]
+    {\Large\color{primary} {{JOB_TITLE}}} \\[6pt]
+    {\color{gray}
+    \faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad
+    \faPhone\ {{PHONE}} \quad
+    \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn} \quad
+    \faGithub\ \href{{{GITHUB}}}{GitHub}
+    }
+\end{center}
+
+\vspace{6pt}
+
+\section{Summary}
+{{SUMMARY}}
+
+\section{Experience}
+{{EXPERIENCE}}
+
+\section{Education}
+{{EDUCATION}}
+
+\section{Skills}
+{{SKILLS}}
+
+\section{Projects}
+{{PROJECTS}}
+
+\end{document}
+""",
+
+    'data_scientist': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.2cm, right=1.2cm, top=1.2cm, bottom=1.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{tabularx}
+
+\definecolor{primary}{HTML}{2B6CB0}
+\definecolor{gray}{HTML}{718096}
+
+\hypersetup{colorlinks=true, urlcolor=primary}
+
+\titleformat{\section}{\large\scshape\color{primary}}{}{0em}{}[\vspace{-4pt}\rule{\linewidth}{1pt}\vspace{2pt}]
+\titlespacing{\section}{0pt}{12pt}{4pt}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=15pt}
+
+\begin{document}
+
+% ---- HEADER ----
+{\Huge\scshape\color{primary} {{NAME}}} \hfill
+{\large\color{gray} {{JOB_TITLE}}} \\[6pt]
+\begin{tabularx}{\linewidth}{@{} X r @{}}
+\faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} & \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn} \\
+\faPhone\ {{PHONE}} & \faGithub\ \href{{{GITHUB}}}{GitHub} \\
+\end{tabularx}
+
+\vspace{4pt}
+
+\section{Profile Analysis}
+{{SUMMARY}}
+
+\section{Methodology \& Experience}
+{{EXPERIENCE}}
+
+\section{Academic Foundation}
+{{EDUCATION}}
+
+\section{Technical Arsenal}
+{{SKILLS}}
+
+\section{Research \& Projects}
+{{PROJECTS}}
+
+\end{document}
+""",
+
+    'marketing_pro': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+
+\definecolor{primary}{HTML}{805AD5}
+\definecolor{dark}{HTML}{2D3748}
+
+\hypersetup{colorlinks=true, urlcolor=primary}
+
+\titleformat{\section}{\large\bfseries\color{white}}{}{0em}{%
+  \colorbox{primary}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \centering #1%
+    }%
+  }%
+}
+\titlespacing{\section}{0pt}{12pt}{6pt}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=15pt}
+
+\begin{document}
+
+% ---- HEADER ----
+\begin{center}
+    {\Huge\bfseries\color{primary} {{NAME}}} \\[6pt]
+    {\Large\color{dark} {{JOB_TITLE}}} \\[6pt]
+    \faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad
+    \faPhone\ {{PHONE}} \quad
+    \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn}
+\end{center}
+
+\vspace{6pt}
+
+\section{Profile}
+{{SUMMARY}}
+
+\section{Campaigns \& Experience}
+{{EXPERIENCE}}
+
+\section{Education}
+{{EDUCATION}}
+
+\section{Expertise \& Tools}
+{{SKILLS}}
+
+\section{Portfolio Projects}
+{{PROJECTS}}
+
+\end{document}
+""",
+
+    'legal_standard': r"""
+\documentclass[11pt,a4paper]{article}
+\usepackage[left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx} % Times Roman
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\hypersetup{colorlinks=false, hidelinks}
+
+\titleformat{\section}{\large\scshape\centering}{}{0em}{}[\vspace{-4pt}\rule{\linewidth}{0.5pt}\vspace{2pt}]
+\titlespacing{\section}{0pt}{14pt}{8pt}
+
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titlespacing{\subsection}{0pt}{8pt}{4pt}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=20pt, label=--}
+
+\begin{document}
+
+% ---- HEADER ----
+\begin{center}
+    {\huge\scshape {{NAME}}} \\[8pt]
+    {\large {{JOB_TITLE}}} \\[6pt]
+    {{EMAIL}} \quad \textbar \quad {{PHONE}} \\[2pt]
+    {{LINKEDIN}}
+\end{center}
+
+\vspace{10pt}
+
+\section{Professional Summary}
+{{SUMMARY}}
+
+\section{Legal Experience}
+{{EXPERIENCE}}
+
+\section{Education \& Bar Admissions}
+{{EDUCATION}}
+
+\section{Specialized Skills}
+{{SKILLS}}
+
+\section{Notable Cases \& Projects}
+{{PROJECTS}}
+
+\end{document}
+""",
+
+    'medical_clinical': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{tgheros}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+
+\definecolor{primary}{HTML}{00A3C4}
+\definecolor{dark}{HTML}{1A202C}
+
+\hypersetup{colorlinks=true, urlcolor=primary}
+
+\titleformat{\section}{\large\bfseries\color{primary}}{}{0em}{}[\vspace{-4pt}\rule{\linewidth}{1.5pt}\vspace{2pt}]
+\titlespacing{\section}{0pt}{12pt}{6pt}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=15pt}
+
+\begin{document}
+
+% ---- HEADER ----
+{\Huge\bfseries\color{dark} {{NAME}}} \\[6pt]
+{\large\color{primary} {{JOB_TITLE}}} \\[8pt]
+\faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad
+\faPhone\ {{PHONE}} \quad
+\faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn}
+
+\vspace{6pt}
+
+\section{Clinical Summary}
+{{SUMMARY}}
+
+\section{Clinical Experience}
+{{EXPERIENCE}}
+
+\section{Education \& Training}
+{{EDUCATION}}
+
+\section{Certifications \& Skills}
+{{SKILLS}}
+
+\section{Research \& Publications}
+{{PROJECTS}}
+
+\end{document}
+"""
 }
 
 def get_template_skeleton(template_style):

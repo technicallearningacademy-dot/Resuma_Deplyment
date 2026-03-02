@@ -14,6 +14,11 @@ class Resume(models.Model):
         ('corporate_executive', 'Corporate Executive'),
         ('creative_designer', 'Creative Designer'),
         ('technical_developer', 'Technical Developer'),
+        ('startup_founder', 'Startup Founder'),
+        ('data_scientist', 'Data Scientist'),
+        ('marketing_pro', 'Marketing Pro'),
+        ('legal_standard', 'Legal Standard'),
+        ('medical_clinical', 'Medical Clinical'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='resumes')

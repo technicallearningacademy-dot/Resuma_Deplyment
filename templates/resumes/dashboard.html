@@ -188,9 +188,9 @@
                         </form>
 
                         <form method="post" action="{% url 'delete_resume' resume.id %}" class="inline m-0"
-                            onsubmit="return confirm('Delete this resume permanently?')">
+                            id="delete-form-{{ resume.id }}">
                             {% csrf_token %}
-                            <button type="submit"
+                            <button type="button" onclick="openDeleteModal('{{ resume.id }}')"
                                 class="flex items-center justify-center p-1.5 rounded-md text-dark-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
                                 title="Delete Resume">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,4 +222,72 @@
         {% endif %}
     </main>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal"
+    class="fixed inset-0 z-50 hidden flex items-center justify-center bg-dark-900/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div class="bg-dark-800 border border-dark-600 rounded-2xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300"
+        id="deleteModalContent">
+        <div class="text-center">
+            <div
+                class="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Delete Resume</h3>
+            <p class="text-dark-400 text-sm mb-6">Are you sure you want to delete this resume? This action cannot be
+                undone.</p>
+        </div>
+        <div class="flex gap-3">
+            <button type="button" onclick="closeDeleteModal()"
+                class="flex-1 btn-secondary py-2 border-dark-600 bg-dark-700 hover:bg-dark-600 text-dark-200">Cancel</button>
+            <button type="button" id="confirmDeleteBtn"
+                class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-red-500/20 transition-all">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let resumeToDelete = null;
+
+    function openDeleteModal(resumeId) {
+        resumeToDelete = resumeId;
+        const modal = document.getElementById('deleteModal');
+        const modalContent = document.getElementById('deleteModalContent');
+
+        modal.classList.remove('hidden');
+        // trigger reflow
+        void modal.offsetWidth;
+        modal.classList.remove('opacity-0');
+        modalContent.classList.remove('scale-95');
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        const modalContent = document.getElementById('deleteModalContent');
+
+        modal.classList.add('opacity-0');
+        modalContent.classList.add('scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            resumeToDelete = null;
+        }, 300);
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+        if (resumeToDelete) {
+            document.getElementById('delete-form-' + resumeToDelete).submit();
+        }
+    });
+
+    // Close modal on click outside
+    document.getElementById('deleteModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+</script>
 {% endblock %}
