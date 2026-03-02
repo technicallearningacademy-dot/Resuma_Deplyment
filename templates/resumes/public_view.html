@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ resume.title }} - Resume{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-8 px-4 h-screen flex flex-col">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-white">{{ resume.title }}</h1>
+            <p class="text-dark-400 text-sm mt-1">Shared by {{ resume.user.get_full_name|default:resume.user.email }}
+            </p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'public_download_resume' resume.share_token %}"
+                class="btn-primary flex items-center gap-2 px-4 py-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download PDF
+            </a>
+            <a href="{% url 'landing' %}" class="btn-secondary flex items-center gap-2 px-4 py-2">
+                Build Yours
+            </a>
+        </div>
+    </div>
+
+    <div class="flex-grow bg-dark-800 rounded-xl overflow-hidden border border-dark-700/50 shadow-2xl relative">
+        <iframe src="{% url 'public_preview_resume_pdf' resume.share_token %}#toolbar=0"
+            class="w-full h-full border-0 absolute inset-0 rounded-xl bg-white" title="Resume PDF Viewer"></iframe>
+    </div>
+</div>
+{% endblock %}

@@ -137,13 +137,7 @@
     </div>
 
     <div class="flex items-center gap-2">
-        <!-- AI Generate -->
-        <button onclick="generateWithAI()" id="ai-btn" class="btn-accent text-sm py-1.5 px-3">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            AI Generate
-        </button>
+
 
         <!-- Save -->
         <button onclick="saveResume()" id="save-btn" class="btn-primary text-sm py-1.5 px-3">
@@ -188,8 +182,85 @@
             </svg>
             History
         </a>
+
+        <!-- Share Dropdown -->
+        <div class="relative" id="share-wrapper">
+            <button onclick="toggleShareMenu()" class="btn-secondary text-sm py-1.5 px-3 flex items-center gap-1.5"
+                id="share-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share
+                <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="share-menu"
+                class="hidden absolute right-0 top-full mt-2 w-52 rounded-xl bg-dark-800 border border-dark-600/40 shadow-2xl z-50 overflow-hidden"
+                style="backdrop-filter:blur(12px)">
+
+                <!-- Header -->
+                <div class="px-4 py-2.5 border-b border-dark-700/50">
+                    <p class="text-xs font-semibold text-dark-400 uppercase tracking-wider">Share via</p>
+                </div>
+
+                <!-- Gmail -->
+                <button onclick="shareViaGmail()"
+                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-700/60 transition-colors text-left group">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style="background:linear-gradient(135deg,#EA4335,#FBBC04)">
+                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-white">Gmail</p>
+                        <p class="text-xs text-dark-400">Send via email</p>
+                    </div>
+                </button>
+
+                <!-- WhatsApp -->
+                <button onclick="shareViaWhatsApp()"
+                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-700/60 transition-colors text-left group">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style="background:linear-gradient(135deg,#25D366,#128C7E)">
+                        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                            <path
+                                d="M12 0C5.373 0 0 5.373 0 12c0 2.396.704 4.63 1.921 6.51L.667 23.333l4.962-1.302A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-2.09 0-4.044-.611-5.688-1.664l-.408-.243-3.384.887.903-3.296-.265-.426A9.954 9.954 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-white">WhatsApp</p>
+                        <p class="text-xs text-dark-400">Send to a contact</p>
+                    </div>
+                </button>
+
+                <!-- Copy Link -->
+                <button onclick="copyResumeLink()"
+                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-dark-700/60 transition-colors text-left border-t border-dark-700/50 group">
+                    <div class="w-8 h-8 rounded-lg bg-dark-600 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-white" id="copy-link-text">Copy Link</p>
+                        <p class="text-xs text-dark-400">Copy builder URL</p>
+                    </div>
+                </button>
+
+            </div>
+        </div>
     </div>
 </div>
+
 
 <!-- Split Screen Builder -->
 <div class="flex mt-[60px] split-container w-full h-[calc(100vh-60px)]">
@@ -204,7 +275,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
-                    AI Tools
+                    AI Assistant
                 </span>
             </button>
             <button class="tab-btn px-4 py-2.5 text-sm font-medium text-dark-400 border-b-2 border-transparent"
@@ -227,19 +298,39 @@
                     Templates
                 </span>
             </button>
+            <button class="tab-btn px-4 py-2.5 text-sm font-medium text-dark-400 border-b-2 border-transparent"
+                data-tab="more-ai-tools">
+                <span class="flex items-center gap-1.5 text-primary-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    More AI Tools
+                </span>
+            </button>
         </div>
 
         <!-- AI Tools Tab (FIRST — active by default) -->
         <div class="tab-panel active flex-1 overflow-y-auto p-4" id="panel-ai-tools">
             <div class="space-y-4">
                 <!-- Custom Prompt -->
-                <div>
-                    <label class="block text-sm font-medium text-dark-300 mb-2">Custom AI Prompt</label>
-                    <textarea id="custom-prompt" rows="3" class="form-input"
+                <div class="relative group">
+                    <textarea id="custom-prompt" rows="4"
+                        class="w-full bg-dark-800/50 border border-primary-500/30 rounded-xl p-4 text-sm text-white placeholder-dark-400 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 resize-none transition-all"
                         placeholder="e.g. Optimize for a Senior Python Developer role at Google..."></textarea>
+
+                    <!-- Small robot icon inside the input area like the screenshot -->
+                    <div
+                        class="absolute bottom-4 right-4 text-primary-500 opacity-50 group-focus-within:opacity-100 transition-opacity">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5a7 7 0 017-7h1V5.73A2 2 0 1112 2zm0 2a1 1 0 100 2 1 1 0 000-2zm-2.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm5 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                        </svg>
+                    </div>
                 </div>
 
-                <button onclick="generateWithAI()" class="btn-accent w-full py-2.5">
+                <button onclick="generateWithAI()"
+                    class="btn-accent w-full py-3 rounded-xl flex justify-center items-center gap-2 font-semibold text-white shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -247,26 +338,39 @@
                     Generate Resume with AI
                 </button>
 
-                <div class="border-t border-dark-600/30 pt-4">
-                    <h4 class="text-sm font-medium text-dark-300 mb-2">Enhance Selected Text</h4>
-                    <p class="text-xs text-dark-500 mb-2">Select text in the editor, then click enhance</p>
-                    <button onclick="enhanceText()" class="btn-secondary w-full py-2">
-                        ✨ Enhance Selected Text
-                    </button>
-                </div>
-
-                <div class="border-t border-dark-600/30 pt-4">
-                    <h4 class="text-sm font-medium text-dark-300 mb-2">ATS Keyword Optimization</h4>
-                    <textarea id="job-description" rows="3" class="form-input mb-2"
-                        placeholder="Paste the job description here..."></textarea>
-                    <button onclick="optimizeKeywords()" class="btn-secondary w-full py-2">
-                        🎯 Optimize Keywords
-                    </button>
-                </div>
-
+                <!-- Status/Result Container -->
                 <div id="ai-result" class="hidden mt-4 p-4 rounded-lg bg-dark-800/60 border border-dark-600/30">
                     <h4 class="text-sm font-medium text-dark-300 mb-2">AI Result</h4>
                     <pre class="text-xs text-dark-300 whitespace-pre-wrap" id="ai-result-text"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- More AI Tools Tab -->
+        <div class="tab-panel flex-1 overflow-y-auto p-4" id="panel-more-ai-tools">
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-sm font-medium text-dark-300 mb-2">✨ Enhance Selected Text</h4>
+                    <p class="text-xs text-dark-500 mb-3">Select text in the editor, then click enhance</p>
+                    <button onclick="enhanceText()"
+                        class="btn-secondary w-full py-2.5 flex items-center justify-center gap-2">
+                        Enhance Text
+                    </button>
+                </div>
+
+                <div class="border-t border-dark-600/30 pt-6">
+                    <h4 class="text-sm font-medium text-dark-300 mb-2">🎯 ATS Keyword Optimization</h4>
+                    <textarea id="job-description" rows="4" class="form-input mb-3 text-white"
+                        placeholder="Paste the job description here..."></textarea>
+                    <button onclick="optimizeKeywords()"
+                        class="btn-secondary w-full py-2.5 flex items-center justify-center gap-2">
+                        Optimize Keywords
+                    </button>
+                </div>
+
+                <div id="ai-result-more" class="hidden mt-4 p-4 rounded-lg bg-dark-800/60 border border-dark-600/30">
+                    <h4 class="text-sm font-medium text-dark-300 mb-2">AI Result</h4>
+                    <pre class="text-xs text-dark-300 whitespace-pre-wrap" id="ai-result-text-more"></pre>
                 </div>
             </div>
         </div>
@@ -424,6 +528,96 @@
     // Initial preview
     if (editor.getValue().trim()) {
         refreshPreview();
+    }
+
+    // === Share Functions =====================================================
+
+    function toggleShareMenu() {
+        const menu = document.getElementById('share-menu');
+        const isOpen = !menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+
+        // Close when clicking outside
+        if (!isOpen) {
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!document.getElementById('share-wrapper').contains(e.target)) {
+                        menu.classList.add('hidden');
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 10);
+        }
+    }
+
+    async function shareViaGmail() {
+        document.getElementById('share-menu').classList.add('hidden');
+        const resumeTitle = '{{ resume.title|escapejs }}';
+        const shareToken = '{{ resume.share_token }}';
+        const publicUrl = window.location.origin + '/resume/share/' + shareToken + '/';
+        // Step 1: Download the PDF to user's device
+        showToast('📥 Downloading your PDF resume...', 'success');
+        const dlLink = document.createElement('a');
+        dlLink.href = '/resume/{{ resume.id }}/download/pdf/';
+        dlLink.download = resumeTitle + '.pdf';
+        document.body.appendChild(dlLink);
+        dlLink.click();
+        document.body.removeChild(dlLink);
+        // Step 2: Open Gmail compose after the download starts
+        await new Promise(r => setTimeout(r, 900));
+        const subject = encodeURIComponent('My Resume: ' + resumeTitle);
+        const body = encodeURIComponent(
+            'Hi,\n\nPlease find my resume attached to this email.\n\n' +
+            '\u2139\ufe0f Note: The file "' + resumeTitle + '.pdf" was just downloaded to your device.\n' +
+            'Please attach it to this email before sending.\n\n' +
+            'You can also view it online here: ' + publicUrl + '\n\nBest regards'
+        );
+        window.open('https://mail.google.com/mail/?view=cm&fs=1&su=' + subject + '&body=' + body, '_blank');
+        showToast('\u2705 PDF downloaded! Attach it to your Gmail draft.', 'success');
+    }
+
+    async function shareViaWhatsApp() {
+        document.getElementById('share-menu').classList.add('hidden');
+        const resumeTitle = '{{ resume.title|escapejs }}';
+        const shareToken = '{{ resume.share_token }}';
+        const publicUrl = window.location.origin + '/resume/share/' + shareToken + '/';
+        // Step 1: Download the PDF
+        showToast('📥 Downloading your PDF resume...', 'success');
+        const dlLink = document.createElement('a');
+        dlLink.href = '/resume/{{ resume.id }}/download/pdf/';
+        dlLink.download = resumeTitle + '.pdf';
+        document.body.appendChild(dlLink);
+        dlLink.click();
+        document.body.removeChild(dlLink);
+        // Step 2: Open WhatsApp Web after download starts
+        await new Promise(r => setTimeout(r, 900));
+        const text = encodeURIComponent(
+            '📄 *' + resumeTitle + '*\n\n' +
+            'Here\'s my resume! You can view it online here:\n' + publicUrl + '\n\n' +
+            '_(PDF attached — sending now)_'
+        );
+        window.open('https://web.whatsapp.com/send?text=' + text, '_blank');
+        showToast('\u2705 PDF downloaded! Open a WhatsApp chat and attach the PDF file.', 'success');
+    }
+
+    function copyResumeLink() {
+        document.getElementById('share-menu').classList.add('hidden');
+        const shareToken = '{{ resume.share_token }}';
+        const url = window.location.origin + '/resume/share/' + shareToken + '/';
+        navigator.clipboard.writeText(url).then(() => {
+            const el = document.getElementById('copy-link-text');
+            if (el) { el.textContent = '✓ Copied!'; setTimeout(() => el.textContent = 'Copy Link', 2000); }
+            showToast('Link copied to clipboard!', 'success');
+        }).catch(() => {
+            // Fallback for older browsers
+            const input = document.createElement('input');
+            input.value = url;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showToast('Link copied!', 'success');
+        });
     }
 
     // === Core Functions ===

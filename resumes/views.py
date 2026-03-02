@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.clickjacking import xframe_options_exempt
 from .models import Resume, ResumeVersion, UploadedCV
 
 
@@ -150,27 +151,33 @@ def delete_resume(request, resume_id):
 
 
 @login_required
-@require_POST
+@xframe_options_exempt
 def preview_resume_pdf(request, resume_id):
     """Generate and return a PDF for live preview without saving."""
     resume = get_object_or_404(Resume, id=resume_id, user=request.user)
     
-    try:
-        data = json.loads(request.body)
-        latex_content = data.get('latex_content', '')
-    except json.JSONDecodeError:
-        latex_content = request.POST.get('latex_content', '')
+    latex_content = ''
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latex_content = data.get('latex_content', '')
+        except json.JSONDecodeError:
+            latex_content = request.POST.get('latex_content', '')
 
     if not latex_content:
         latex_content = resume.latex_content
 
     from templates_engine.compiler import compile_latex_to_pdf
-    pdf_content = compile_latex_to_pdf(latex_content)
     
-    if pdf_content:
-        return HttpResponse(pdf_content, content_type='application/pdf')
-    else:
-        return JsonResponse({'error': 'Failed to generate PDF preview'}, status=400)
+    try:
+        pdf_content = compile_latex_to_pdf(latex_content)
+        
+        if pdf_content:
+            return HttpResponse(pdf_content, content_type='application/pdf')
+        else:
+            return JsonResponse({'error': 'Failed to generate PDF preview (no content)'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @login_required
@@ -206,3 +213,47 @@ def download_resume(request, resume_id, file_format):
 
     messages.error(request, 'Invalid format.')
     return redirect('resume_builder', resume_id=resume.id)
+
+def public_resume_view(request, token):
+    """
+    Public, read-only view of a resume using its secure sharing token.
+    Allows anyone with the link to view the PDF.
+    """
+    resume = get_object_or_404(Resume, share_token=token, is_active=True, is_public=True)
+    return render(request, 'resumes/public_view.html', {'resume': resume})
+
+
+@xframe_options_exempt
+def public_preview_resume_pdf(request, token):
+    """
+    Generate and return a PDF for the public share page iframe without requiring login.
+    """
+    resume = get_object_or_404(Resume, share_token=token, is_active=True, is_public=True)
+    
+    from templates_engine.compiler import compile_latex_to_pdf
+    
+    try:
+        pdf_content = compile_latex_to_pdf(resume.latex_content)
+        if pdf_content:
+            return HttpResponse(pdf_content, content_type='application/pdf')
+        else:
+            return HttpResponse("Failed to generate PDF.", status=400)
+    except Exception as e:
+        return HttpResponse(f"Error: {e}", status=500)
+
+
+def public_download_resume(request, token):
+    """
+    Download a PDF of the resume from the public share link without requiring login.
+    """
+    resume = get_object_or_404(Resume, share_token=token, is_active=True, is_public=True)
+    
+    from templates_engine.compiler import compile_latex_to_pdf
+    pdf_content = compile_latex_to_pdf(resume.latex_content)
+    
+    if pdf_content:
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{resume.title}.pdf"'
+        return response
+    else:
+        return HttpResponse("Failed to generate PDF for download.", status=500)

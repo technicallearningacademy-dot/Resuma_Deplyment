@@ -12,4 +12,7 @@ urlpatterns = [
     path('resume/<int:resume_id>/delete/', views.delete_resume, name='delete_resume'),
     path('resume/<int:resume_id>/preview/', views.preview_resume_pdf, name='preview_resume_pdf'),
     path('resume/<int:resume_id>/download/<str:file_format>/', views.download_resume, name='download_resume'),
+    path('resume/share/<uuid:token>/', views.public_resume_view, name='public_resume'),
+    path('resume/share/<uuid:token>/preview/', views.public_preview_resume_pdf, name='public_preview_resume_pdf'),
+    path('resume/share/<uuid:token>/download/', views.public_download_resume, name='public_download_resume'),
 ]

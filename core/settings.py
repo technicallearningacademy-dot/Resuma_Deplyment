@@ -45,6 +45,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    # Custom monitoring middleware
+    'users.middleware.BlockedUserMiddleware',   # ← Instantly blocks banned users
+    'users.middleware.TrackLastIPMiddleware',   # ← Tracks user IP address
 ]
 
 ROOT_URLCONF = 'core.urls'

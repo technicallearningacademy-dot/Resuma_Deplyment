@@ -3,6 +3,7 @@ Resume and version history models.
 """
 from django.db import models
 from django.conf import settings
+import uuid
 
 
 class Resume(models.Model):
@@ -20,11 +21,21 @@ class Resume(models.Model):
     template_name = models.CharField(max_length=50, choices=TEMPLATE_CHOICES, default='modern_ats_clean')
     latex_content = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True, help_text='Allow anyone with the link to view and download this resume')
+    share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, help_text='Unique token for the public share link')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-updated_at']
+
+    @property
+    def latest_pdf_url(self):
+        """Returns the URL of the latest version's PDF file, if it exists."""
+        latest_version = self.versions.filter(pdf_file__isnull=False).exclude(pdf_file='').first()
+        if latest_version and latest_version.pdf_file:
+            return latest_version.pdf_file.url
+        return None
 
     def __str__(self):
         return f'{self.title} - {self.user.email}'

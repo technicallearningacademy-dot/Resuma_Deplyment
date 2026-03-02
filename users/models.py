@@ -33,6 +33,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_profile_complete = models.BooleanField(default=False)
+    is_blocked = models.BooleanField(default=False, help_text='Block user from accessing the platform')
+    api_daily_limit = models.PositiveIntegerField(
+        default=0,
+        help_text='Custom daily AI generation limit. 0 = use system default (5)'
+    )
+    login_count = models.PositiveIntegerField(default=0, help_text='Total number of logins')
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = CustomUserManager()
