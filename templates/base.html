@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ResumeForge AI{% endblock %} | AI Resume Builder</title>
+
+    <!-- SEO Meta -->
+    <meta name="description"
+        content="{% block meta_description %}Build ATS-optimized resumes with AI. Professional templates, LaTeX generation, instant PDF & DOCX export.{% endblock %}">
+    <meta name="keywords" content="resume builder, ATS resume, AI resume, LaTeX resume, professional CV">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}ResumeForge AI — Smart Resume Builder{% endblock %}">
+    <meta property="og:description" content="Build ATS-optimized resumes powered by AI. 5 professional templates.">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+
+    <!-- Schema.org -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ResumeForge AI",
+        "description": "AI-powered ATS Resume Builder",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web"
+    }
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#f0f1ff', 100: '#e0e1ff', 200: '#c1c4fe', 300: '#a2a6fd', 400: '#8389fc', 500: '#646cfb', 600: '#4f54e0', 700: '#3d42b5', 800: '#2d318a', 900: '#1e2160', 950: '#0f1030' },
+                        accent: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' },
+                        emerald: { 400: '#34d399', 500: '#10b981', 600: '#059669' },
+                        rose: { 400: '#fb7185', 500: '#f43f5e', 600: '#e11d48' },
+                        dark: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#030712' },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- AOS CSS for scroll animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Premium gradient background — deep midnight to rich navy */
+        .gradient-bg {
+            background: linear-gradient(145deg, #030712 0%, #0c1222 25%, #111a35 50%, #0c1a30 75%, #030712 100%);
+            min-height: 100vh;
+        }
+
+        /* Animated mesh gradient overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(100, 108, 251, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 80%, rgba(249, 115, 22, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(24px) saturate(1.5);
+            border: 1px solid rgba(100, 108, 251, 0.12);
+        }
+
+        .glass-light {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Gradient text — vibrant indigo to warm coral */
+        .gradient-text {
+            background: linear-gradient(135deg, #8389fc 0%, #fb923c 50%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-border {
+            border-image: linear-gradient(135deg, #646cfb, #fb923c) 1;
+        }
+
+        /* Animations */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(100, 108, 251, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(100, 108, 251, 0.5), 0 0 80px rgba(249, 115, 22, 0.15);
+            }
+        }
+
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .animate-slide-up {
+            animation: slide-up 0.6s ease-out forwards;
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+        }
+
+        .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(100, 108, 251, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        /* Custom scrollbar — matches theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #646cfb, #fb923c);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #8389fc, #fdba74);
+        }
+
+        /* Form inputs — soft glow */
+        .form-input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(100, 108, 251, 0.15);
+            border-radius: 0.625rem;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #646cfb;
+            box-shadow: 0 0 0 3px rgba(100, 108, 251, 0.15), 0 0 20px rgba(100, 108, 251, 0.1);
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .form-input::placeholder {
+            color: #475569;
+        }
+
+        /* Buttons — premium gradients with glow */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.5rem;
+            background: linear-gradient(135deg, #646cfb 0%, #4f54e0 50%, #8389fc 100%);
+            background-size: 200% 200%;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.625rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(100, 108, 251, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(100, 108, 251, 0.45);
+            background-position: 100% 100%;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.5rem;
+            background: rgba(100, 108, 251, 0.08);
+            color: #c1c4fe;
+            font-weight: 500;
+            border-radius: 0.625rem;
+            border: 1px solid rgba(100, 108, 251, 0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 108, 251, 0.15);
+            border-color: rgba(100, 108, 251, 0.4);
+            color: #e0e1ff;
+        }
+
+        .btn-accent {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.5rem;
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%);
+            background-size: 200% 200%;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.625rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.25);
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(249, 115, 22, 0.4);
+            background-position: 100% 100%;
+        }
+
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            color: white;
+            font-weight: 500;
+            border-radius: 0.625rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.2);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 30px rgba(244, 63, 94, 0.4);
+        }
+
+        /* Cards — premium glass effect */
+        .card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(100, 108, 251, 0.1);
+            border-radius: 0.875rem;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            border-color: rgba(100, 108, 251, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(100, 108, 251, 0.08);
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.625rem;
+            color: white;
+            font-weight: 500;
+            font-size: 0.875rem;
+            animation: slide-up 0.3s ease-out;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.9), rgba(225, 29, 72, 0.9));
+            box-shadow: 0 8px 25px rgba(244, 63, 94, 0.3);
+        }
+
+        .toast-info {
+            background: linear-gradient(135deg, rgba(100, 108, 251, 0.9), rgba(79, 84, 224, 0.9));
+            box-shadow: 0 8px 25px rgba(100, 108, 251, 0.3);
+        }
+
+        /* Selection color */
+        ::selection {
+            background: rgba(100, 108, 251, 0.3);
+            color: white;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="gradient-bg min-h-screen text-dark-200">
+
+    {% if messages %}
+    <div id="toast-container">
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}" onclick="this.remove()">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => {
+                t.style.opacity = '0';
+                t.style.transition = 'opacity 0.5s';
+                setTimeout(() => t.remove(), 500);
+            });
+        }, 4000);
+    </script>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <!-- AOS Script -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Vanilla Tilt Script for 3D Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Scroll Animations
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out-cubic',
+                once: true,
+                offset: 50,
+            });
+
+            // Initialize 3D Tilt on Cards
+            const tiltElements = document.querySelectorAll(".tilt-card");
+            if (tiltElements.length > 0) {
+                try {
+                    VanillaTilt.init(tiltElements, {
+                        max: 8,
+                        speed: 400,
+                        glare: true,
+                        "max-glare": 0.15,
+                        scale: 1.02
+                    });
+                } catch (e) { console.warn('VanillaTilt not loaded', e); }
+            }
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

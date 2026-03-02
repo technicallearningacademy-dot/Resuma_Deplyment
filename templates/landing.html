@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% block title %}AI-Powered ATS Resume Builder{% endblock %}
+{% block meta_description %}Build professional ATS-optimized resumes with AI. 5 stunning templates, LaTeX generation,
+PDF & DOCX export. Land more interviews.{% endblock %}
+
+{% block content %}
+<!-- Navigation -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2">
+            <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <span class="text-xl font-bold text-white">Resume<span class="gradient-text">Forge</span> AI</span>
+        </a>
+        <div class="flex items-center gap-4">
+            <a href="{% url 'login' %}" class="btn-secondary text-sm">Sign In</a>
+            <a href="{% url 'register' %}" class="btn-primary text-sm">Get Started Free</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="relative min-h-screen flex items-center justify-center px-6 pt-20 overflow-hidden">
+    <!-- Animated background elements -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-float"
+            style="animation-delay: -3s"></div>
+        <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-float"
+            style="animation-delay: -1.5s"></div>
+    </div>
+
+    <div class="relative max-w-5xl mx-auto text-center" data-aos="fade-up" data-aos-duration="1000">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-8 text-sm text-primary-300">
+            <span class="w-2 h-2 bg-accent-400 rounded-full animate-pulse"></span>
+            Powered By AI
+        </div>
+
+        <h1 class="text-5xl md:text-7xl font-black text-white leading-tight mb-6">
+            Build <span class="gradient-text">ATS-Optimized</span><br> Resumes in Seconds
+        </h1>
+
+        <p class="text-lg md:text-xl text-dark-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            AI-powered resume builder with professional LaTeX templates. Beat applicant tracking systems and land more
+            interviews.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <a href="/register/" class="btn-primary text-lg px-8 py-3 animate-pulse-glow">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Start Building — It's Free
+            </a>
+            <a href="#features" class="btn-secondary text-lg px-8 py-3">
+                See How It Works
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-8 max-w-lg mx-auto" data-aos="fade-up" data-aos-delay="400">
+            <div>
+                <div class="text-3xl font-bold gradient-text">5</div>
+                <div class="text-sm text-dark-400 mt-1">Pro Templates</div>
+            </div>
+            <div>
+                <div class="text-3xl font-bold gradient-text">AI</div>
+                <div class="text-sm text-dark-400 mt-1">Powered</div>
+            </div>
+            <div>
+                <div class="text-3xl font-bold gradient-text">ATS</div>
+                <div class="text-sm text-dark-400 mt-1">Optimized</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-24 px-6 relative z-10">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Everything You Need to <span
+                    class="gradient-text">Land the Job</span></h2>
+            <p class="text-dark-400 text-lg max-w-2xl mx-auto">Powerful features that make resume building effortless
+                and effective.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Feature 1 -->
+            <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="100">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500/20 to-primary-500/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">AI Resume Generation</h3>
+                <p class="text-dark-400 text-sm leading-relaxed">Google Gemini AI transforms your data into polished,
+                    ATS-friendly LaTeX resumes with optimized keywords.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="200">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-500/20 to-accent-500/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">5 Professional Templates</h3>
+                <p class="text-dark-400 text-sm leading-relaxed">Modern ATS Clean, Minimal Academic, Corporate
+                    Executive, Creative Designer, Technical Developer.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="300">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Live Editor & Preview</h3>
+                <p class="text-dark-400 text-sm leading-relaxed">Split-screen editor with real-time LaTeX editing and
+                    instant visual preview side by side.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="100">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500/20 to-rose-500/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">PDF & DOCX Export</h3>
+                <p class="text-dark-400 text-sm leading-relaxed">Download your resume as a professionally formatted PDF
+                    or editable Word document.</p>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="200">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Version History</h3>
+                <p class="text-dark-400 text-sm leading-relaxed">Never lose your work. Track every change with full
+                    version history and instant rollback.</p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="300">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">ATS Keyword Optimization</h3>
+                <p class="text-dark-400 text-sm leading-relaxed">AI analyzes your resume and suggests keyword
+                    improvements to beat applicant tracking systems.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-24 px-6 relative z-10">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">How It <span class="gradient-text">Works</span>
+            </h2>
+        </div>
+
+        <div class="space-y-8">
+            <div class="flex items-start gap-6 card tilt-card" data-aos="fade-right" data-aos-delay="100">
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 text-white font-bold">
+                    1</div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-1">Create Your Profile</h3>
+                    <p class="text-dark-400 text-sm">Enter your education, experience, skills, and projects — or upload
+                        an existing CV.</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-6 card tilt-card" data-aos="fade-left" data-aos-delay="200">
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center flex-shrink-0 text-white font-bold">
+                    2</div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-1">AI Generates Your Resume</h3>
+                    <p class="text-dark-400 text-sm">Google Gemini AI creates a polished, ATS-optimized LaTeX resume
+                        from your data.</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-6 card tilt-card" data-aos="fade-right" data-aos-delay="300">
+                <div
+                    class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center flex-shrink-0 text-white font-bold">
+                    3</div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-1">Customize & Download</h3>
+                    <p class="text-dark-400 text-sm">Edit in the live editor, switch templates, and download as PDF or
+                        Word.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24 px-6 relative z-10">
+    <div class="max-w-3xl mx-auto text-center" data-aos="zoom-in" data-aos-duration="1000">
+        <div class="card p-12 tilt-card"
+            style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(16,185,129,0.1));">
+            <h2 class="text-3xl font-bold text-white mb-4">Ready to Build Your Perfect Resume?</h2>
+            <p class="text-dark-400 mb-8">Join thousands who land more interviews with AI-optimized resumes.</p>
+            <a href="/register/" class="btn-primary text-lg px-8 py-3 animate-pulse-glow">
+                Get Started Free →
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="border-t border-dark-700/50 pt-12 pb-8 px-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-10 mb-10">
+            <!-- Brand & Description -->
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <span class="text-lg font-bold text-white">Resume<span class="gradient-text">Forge</span> AI</span>
+                </div>
+                <p class="text-dark-400 text-sm leading-relaxed max-w-md">At JabiruLabs, we craft smart digital
+                    solutions — from websites and apps to AI chatbots, custom AI models, and more. We bring ideas to
+                    life with creativity and innovation.</p>
+                <div class="flex items-center gap-3 mt-4">
+                    <a href="https://www.instagram.com/jabirulabs" target="_blank"
+                        class="w-8 h-8 rounded-lg bg-dark-800/60 border border-dark-700/50 flex items-center justify-center text-dark-400 hover:text-pink-400 hover:border-pink-500/30 transition-all"><svg
+                            class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                        </svg></a>
+                    <a href="https://www.facebook.com/jabirulabs" target="_blank"
+                        class="w-8 h-8 rounded-lg bg-dark-800/60 border border-dark-700/50 flex items-center justify-center text-dark-400 hover:text-blue-400 hover:border-blue-500/30 transition-all"><svg
+                            class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg></a>
+                    <a href="https://twitter.com/jabirulabs" target="_blank"
+                        class="w-8 h-8 rounded-lg bg-dark-800/60 border border-dark-700/50 flex items-center justify-center text-dark-400 hover:text-sky-400 hover:border-sky-500/30 transition-all"><svg
+                            class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg></a>
+                    <a href="https://www.linkedin.com/company/jabirulabs" target="_blank"
+                        class="w-8 h-8 rounded-lg bg-dark-800/60 border border-dark-700/50 flex items-center justify-center text-dark-400 hover:text-blue-500 hover:border-blue-500/30 transition-all"><svg
+                            class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg></a>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="md:text-right">
+                <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Get In Touch</h4>
+                <ul class="space-y-2.5 text-sm text-dark-400">
+                    <li class="flex items-center gap-2 md:justify-end">
+                        <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <a href="mailto:info@jabirulabs.com"
+                            class="hover:text-primary-300 transition-colors">info@jabirulabs.com</a>
+                    </li>
+                    <li class="flex items-center gap-2 md:justify-end">
+                        <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <a href="tel:+923342515060" class="hover:text-primary-300 transition-colors">+92 334 251
+                            5060</a>
+                    </li>
+                    <li class="flex items-center gap-2 md:justify-end">
+                        <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Bannu, KPK, Pakistan</span>
+                    </li>
+                    <li class="flex items-center gap-2 md:justify-end">
+                        <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Mon - Fri, 9AM - 5PM</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="border-t border-dark-700/50 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
+            <p class="text-xs text-dark-500">© 2026 JabiruLabs. All rights reserved.</p>
+            <div class="flex items-center gap-4 text-xs text-dark-500">
+                <a href="/terms/" class="hover:text-primary-300 transition-colors">Terms & Conditions</a>
+                <span class="text-dark-700">|</span>
+                <a href="/privacy/" class="hover:text-primary-300 transition-colors">Privacy Policy</a>
+            </div>
+        </div>
+    </div>
+</footer>
+{% endblock %}

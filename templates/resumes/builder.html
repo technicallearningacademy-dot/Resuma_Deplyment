@@ -1,0 +1,661 @@
+{% extends 'base.html' %}
+{% block title %}{{ resume.title }} - Builder{% endblock %}
+
+{% block extra_head %}
+<!-- CodeMirror for LaTeX editing -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<style>
+    .CodeMirror {
+        height: 100% !important;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        background: #0d1117;
+        color: #e2e8f0;
+        border-radius: 0;
+    }
+
+    .CodeMirror-gutters {
+        background: #0d1117;
+        border-right: 1px solid #1e293b;
+    }
+
+    .CodeMirror-linenumber {
+        color: #475569;
+    }
+
+    .CodeMirror-cursor {
+        border-left-color: #6366f1;
+    }
+
+    .CodeMirror-selected {
+        background: rgba(99, 102, 241, 0.2) !important;
+    }
+
+    .cm-s-material-darker .cm-keyword {
+        color: #c792ea;
+    }
+
+    .cm-s-material-darker .cm-string {
+        color: #c3e88d;
+    }
+
+    .cm-s-material-darker .cm-comment {
+        color: #546e7a;
+    }
+
+    .builder-panel {
+        height: calc(100vh - 60px);
+        overflow: hidden;
+    }
+
+    .preview-frame {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: white;
+    }
+
+    /* Split.js gutters */
+    .gutter {
+        background-color: #1e293b;
+        background-repeat: no-repeat;
+        background-position: 50%;
+        cursor: col-resize;
+    }
+
+    .gutter.gutter-horizontal {
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjbd5HmQAAPe4kP0hAokFAAAAAElFTkSuQmCC');
+    }
+
+    /* Tab styles */
+    .tab-btn {
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        color: #818cf8;
+        border-color: #818cf8;
+    }
+
+    .tab-panel {
+        display: none;
+    }
+
+    .tab-panel.active {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* Template card */
+    .template-card {
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .template-card:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+
+    .template-card.selected {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    /* Spinner */
+    .spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Toolbar -->
+<div
+    class="fixed top-0 left-0 right-0 z-50 h-[60px] glass border-b border-dark-700/50 flex items-center justify-between px-4">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'dashboard' %}"
+            class="flex items-center gap-2 text-dark-400 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="text-sm">Dashboard</span>
+        </a>
+        <div class="h-5 w-px bg-dark-600"></div>
+        <h1 class="text-white font-semibold text-sm" id="resume-title">{{ resume.title }}</h1>
+        <span class="text-xs px-2 py-0.5 rounded bg-dark-700 text-dark-400">
+            {{ resume.get_template_name_display }}
+        </span>
+    </div>
+
+    <div class="flex items-center gap-2">
+        <!-- AI Generate -->
+        <button onclick="generateWithAI()" id="ai-btn" class="btn-accent text-sm py-1.5 px-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            AI Generate
+        </button>
+
+        <!-- Save -->
+        <button onclick="saveResume()" id="save-btn" class="btn-primary text-sm py-1.5 px-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            Save
+        </button>
+
+        <!-- Full Preview Toggle -->
+        <button onclick="toggleFullPreview()" id="preview-toggle-btn" class="btn-secondary text-sm py-1.5 px-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+            Full Preview
+        </button>
+
+        <button onclick="downloadFormat('pdf')" class="btn-secondary text-sm py-1.5 px-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            PDF
+        </button>
+
+        <!-- DOCX Download -->
+        <button onclick="downloadFormat('docx')" class="btn-secondary text-sm py-1.5 px-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            DOCX
+        </button>
+
+        <!-- History -->
+        <a href="{% url 'resume_history' resume.id %}" class="btn-secondary text-sm py-1.5 px-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            History
+        </a>
+    </div>
+</div>
+
+<!-- Split Screen Builder -->
+<div class="flex mt-[60px] split-container w-full h-[calc(100vh-60px)]">
+    <!-- LEFT PANEL: Editor -->
+    <div id="split-0" class="builder-panel border-r border-dark-700/50 flex flex-col">
+        <!-- Panel Tabs -->
+        <div class="flex border-b border-dark-700/50 bg-dark-900/50">
+            <button class="tab-btn active px-4 py-2.5 text-sm font-medium border-b-2 border-transparent"
+                data-tab="ai-tools">
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    AI Tools
+                </span>
+            </button>
+            <button class="tab-btn px-4 py-2.5 text-sm font-medium text-dark-400 border-b-2 border-transparent"
+                data-tab="editor">
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    LaTeX Editor
+                </span>
+            </button>
+            <button class="tab-btn px-4 py-2.5 text-sm font-medium text-dark-400 border-b-2 border-transparent"
+                data-tab="templates">
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" />
+                    </svg>
+                    Templates
+                </span>
+            </button>
+        </div>
+
+        <!-- AI Tools Tab (FIRST — active by default) -->
+        <div class="tab-panel active flex-1 overflow-y-auto p-4" id="panel-ai-tools">
+            <div class="space-y-4">
+                <!-- Custom Prompt -->
+                <div>
+                    <label class="block text-sm font-medium text-dark-300 mb-2">Custom AI Prompt</label>
+                    <textarea id="custom-prompt" rows="3" class="form-input"
+                        placeholder="e.g. Optimize for a Senior Python Developer role at Google..."></textarea>
+                </div>
+
+                <button onclick="generateWithAI()" class="btn-accent w-full py-2.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Resume with AI
+                </button>
+
+                <div class="border-t border-dark-600/30 pt-4">
+                    <h4 class="text-sm font-medium text-dark-300 mb-2">Enhance Selected Text</h4>
+                    <p class="text-xs text-dark-500 mb-2">Select text in the editor, then click enhance</p>
+                    <button onclick="enhanceText()" class="btn-secondary w-full py-2">
+                        ✨ Enhance Selected Text
+                    </button>
+                </div>
+
+                <div class="border-t border-dark-600/30 pt-4">
+                    <h4 class="text-sm font-medium text-dark-300 mb-2">ATS Keyword Optimization</h4>
+                    <textarea id="job-description" rows="3" class="form-input mb-2"
+                        placeholder="Paste the job description here..."></textarea>
+                    <button onclick="optimizeKeywords()" class="btn-secondary w-full py-2">
+                        🎯 Optimize Keywords
+                    </button>
+                </div>
+
+                <div id="ai-result" class="hidden mt-4 p-4 rounded-lg bg-dark-800/60 border border-dark-600/30">
+                    <h4 class="text-sm font-medium text-dark-300 mb-2">AI Result</h4>
+                    <pre class="text-xs text-dark-300 whitespace-pre-wrap" id="ai-result-text"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Tab -->
+        <div class="tab-panel flex-1" id="panel-editor">
+            <textarea id="latex-editor">{{ resume.latex_content }}</textarea>
+        </div>
+
+        <!-- Templates Tab -->
+        <div class="tab-panel flex-1 overflow-y-auto p-4" id="panel-templates">
+            <div class="space-y-3">
+                {% for value, label in template_choices %}
+                <div class="template-card p-4 rounded-lg border border-dark-600/30 bg-dark-800/40 {% if resume.template_name == value %}selected{% endif %}"
+                    data-template="{{ value }}" onclick="selectTemplate('{{ value }}')">
+                    <h4 class="text-white font-medium text-sm">{{ label }}</h4>
+                    <p class="text-dark-400 text-xs mt-1">Click to generate with this template</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Preview -->
+    <div id="split-1" class="builder-panel bg-dark-100 flex flex-col">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-dark-200 bg-white/80">
+            <span class="text-sm font-medium text-dark-700">Live PDF Preview</span>
+            <button onclick="refreshPreview()"
+                class="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+            </button>
+        </div>
+        <div class="flex-1 w-full h-full" id="preview-container">
+            <iframe id="pdf-preview-frame" class="w-full h-[calc(100vh-100px)] border-0 bg-dark-100 hidden"
+                src=""></iframe>
+
+            <div id="preview-placeholder" class="w-full h-full flex flex-col items-center justify-center bg-dark-100">
+                <div class="w-12 h-12 border-3 border-primary-500/30 border-t-primary-500 rounded-full spinner mx-auto mb-4 hidden"
+                    id="preview-spinner"></div>
+                <svg class="w-16 h-16 mx-auto mb-4 text-dark-500" id="preview-icon" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="font-medium text-dark-400" id="preview-msg">No resume content yet</p>
+                <p class="text-sm text-dark-500 mt-1" id="preview-submsg">Click "AI Generate" to create your resume, or
+                    start typing LaTeX</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="hidden fixed inset-0 z-[100] bg-dark-900/80 flex items-center justify-center">
+    <div class="text-center">
+        <div class="w-12 h-12 border-3 border-primary-500/30 border-t-primary-500 rounded-full spinner mx-auto mb-4">
+        </div>
+        <p class="text-white font-medium" id="loading-text">Generating with AI...</p>
+        <p class="text-dark-400 text-sm mt-1">This may take 10-20 seconds</p>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/stex/stex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+
+<script>
+    const RESUME_ID = {{ resume.id }};
+    const CSRF_TOKEN = '{{ csrf_token }}';
+    let currentTemplate = '{{ resume.template_name }}';
+    let splitInstance = null;
+    let isFullPreview = false;
+
+    // Initialize Split.js
+    function initSplit() {
+        splitInstance = Split(['#split-0', '#split-1'], {
+            sizes: [50, 50],
+            minSize: [300, 300],
+            gutterSize: 6,
+            snapOffset: 0,
+            onDrag: () => { if (editor) editor.refresh(); }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initSplit();
+    });
+
+    // Initialize CodeMirror
+    const editor = CodeMirror.fromTextArea(document.getElementById('latex-editor'), {
+        mode: 'stex',
+        theme: 'material-darker',
+        lineNumbers: true,
+        lineWrapping: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        indentUnit: 2,
+        tabSize: 2,
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+            if (btn.dataset.tab === 'editor') editor.refresh();
+        });
+    });
+
+    // Full Preview Toggle
+    function toggleFullPreview() {
+        isFullPreview = !isFullPreview;
+        const btn = document.getElementById('preview-toggle-btn');
+
+        if (isFullPreview) {
+            splitInstance.destroy();
+            document.getElementById('split-0').style.display = 'none';
+            document.getElementById('split-1').style.width = '100%';
+            btn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Split View
+            `;
+            btn.classList.replace('btn-secondary', 'btn-primary');
+        } else {
+            document.getElementById('split-0').style.display = 'flex';
+            document.getElementById('split-1').style.width = '';
+            initSplit();
+            editor.refresh();
+            btn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Full Preview
+            `;
+            btn.classList.replace('btn-primary', 'btn-secondary');
+        }
+    }
+
+    // Auto-refresh preview on content change (debounced)
+    let previewTimer;
+    editor.on('change', () => {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(refreshPreview, 2500); // 2.5s debounce for heavy backend PDF compilation
+    });
+
+    // Initial preview
+    if (editor.getValue().trim()) {
+        refreshPreview();
+    }
+
+    // === Core Functions ===
+
+    function showLoading(text) {
+        document.getElementById('loading-text').textContent = text;
+        document.getElementById('loading-overlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.onclick = () => toast.remove();
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.5s';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
+    async function generateWithAI() {
+        showLoading('AI is generating your resume...');
+
+        const customPrompt = document.getElementById('custom-prompt')?.value || '';
+
+        try {
+            const response = await fetch('/ai/generate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
+                body: JSON.stringify({
+                    resume_id: RESUME_ID,
+                    template_style: currentTemplate,
+                    custom_prompt: customPrompt,
+                    current_latex: editor.getValue()
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.latex) {
+                editor.setValue(data.latex);
+                refreshPreview();
+                showToast('Resume generated successfully!');
+
+                // Switch to editor tab automatically
+                document.querySelector('[data-tab="editor"]').click();
+            } else {
+                showToast(data.error || 'Generation failed', 'error');
+            }
+        } catch (err) {
+            showToast('Network error. Please try again.', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function saveResume() {
+        const latexContent = editor.getValue();
+        const formData = new FormData();
+        formData.append('latex_content', latexContent);
+        formData.append('template_name', currentTemplate);
+        formData.append('change_note', 'Manual save');
+
+        try {
+            const response = await fetch(`/resume/${RESUME_ID}/save/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF_TOKEN },
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                showToast(`Saved! Version ${data.version}`);
+            } else {
+                showToast('Save failed', 'error');
+            }
+        } catch (err) {
+            showToast('Save failed', 'error');
+        }
+    }
+
+    async function downloadFormat(format) {
+        showLoading('Preparing download...');
+        await saveResume(); // Ensure latest latex is in DB before generating template file
+        hideLoading();
+        window.location.href = `/resume/${RESUME_ID}/download/${format}/`;
+    }
+
+    function selectTemplate(template) {
+        currentTemplate = template;
+        document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+        document.querySelector(`[data-template="${template}"]`).classList.add('selected');
+        generateWithAI();
+    }
+
+    async function enhanceText() {
+        const selected = editor.getSelection();
+        if (!selected) {
+            showToast('Select text in the editor first', 'info');
+            return;
+        }
+
+        showLoading('Enhancing text...');
+        try {
+            const response = await fetch('/ai/enhance/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                body: JSON.stringify({ text: selected, context: 'resume bullet point' })
+            });
+            const data = await response.json();
+            if (data.enhanced_text) {
+                editor.replaceSelection(data.enhanced_text);
+                showToast('Text enhanced!');
+            } else {
+                showToast(data.error || 'Enhancement failed', 'error');
+            }
+        } catch (err) {
+            showToast('Error enhancing text', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function optimizeKeywords() {
+        const resumeText = editor.getValue();
+        const jobDesc = document.getElementById('job-description')?.value || '';
+
+        if (!resumeText) {
+            showToast('No resume content to optimize', 'info');
+            return;
+        }
+
+        showLoading('Optimizing keywords...');
+        try {
+            const response = await fetch('/ai/optimize/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                body: JSON.stringify({ resume_text: resumeText, job_description: jobDesc })
+            });
+            const data = await response.json();
+            if (data.suggestions) {
+                document.getElementById('ai-result').classList.remove('hidden');
+                document.getElementById('ai-result-text').textContent = data.suggestions;
+                showToast('Keyword analysis complete!');
+            } else {
+                showToast(data.error || 'Optimization failed', 'error');
+            }
+        } catch (err) {
+            showToast('Error optimizing', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Keep track of the current blob URL to revoke it and prevent memory leaks
+    let currentPdfUrl = null;
+
+    async function refreshPreview() {
+        const latex = editor.getValue();
+        if (!latex.trim()) return;
+
+        const iframe = document.getElementById('pdf-preview-frame');
+        const placeholder = document.getElementById('preview-placeholder');
+        const spinner = document.getElementById('preview-spinner');
+        const icon = document.getElementById('preview-icon');
+        const msg = document.getElementById('preview-msg');
+        const submsg = document.getElementById('preview-submsg');
+
+        // Show loading state
+        iframe.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        icon.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        msg.textContent = 'Compiling PDF...';
+        submsg.textContent = 'Please wait';
+
+        try {
+            const response = await fetch(`/resume/${RESUME_ID}/preview/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
+                body: JSON.stringify({ latex_content: latex })
+            });
+
+            if (!response.ok) throw new Error('Preview generation failed');
+
+            const blob = await response.blob();
+
+            // Clean up old object URL
+            if (currentPdfUrl) {
+                URL.revokeObjectURL(currentPdfUrl);
+            }
+
+            currentPdfUrl = URL.createObjectURL(blob);
+
+            // Assuming most browsers have native PDF support (Chromium/Firefox/Safari)
+            // It will render natively inside the iframe
+            iframe.src = currentPdfUrl;
+
+            // Hide placeholder, show iframe
+            placeholder.classList.add('hidden');
+            iframe.classList.remove('hidden');
+
+        } catch (err) {
+            console.error('Preview error:', err);
+            spinner.classList.add('hidden');
+            icon.classList.remove('hidden');
+            icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+            icon.classList.replace('text-dark-500', 'text-rose-500');
+            msg.textContent = 'Compile Error';
+            msg.classList.replace('text-dark-400', 'text-rose-400');
+            submsg.textContent = 'Check your LaTeX syntax for errors';
+        }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            saveResume();
+        }
+    });
+</script>
+{% endblock %}

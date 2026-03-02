@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Create Resume{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-6">
+    <div class="w-full max-w-xl animate-slide-up">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Create New Resume</h1>
+            <p class="text-dark-400">Choose a template and name your resume</p>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="card">
+                <label class="block text-sm font-medium text-dark-300 mb-2">Resume Title</label>
+                <input type="text" name="title" value="My Resume" required class="form-input text-lg"
+                    placeholder="e.g. Software Engineer Resume">
+            </div>
+
+            <div class="card">
+                <label class="block text-sm font-medium text-dark-300 mb-4">Choose Template</label>
+                <div class="grid grid-cols-1 gap-3">
+                    <label
+                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
+                        <input type="radio" name="template" value="modern_ats_clean" checked
+                            class="w-4 h-4 text-primary-500">
+                        <div>
+                            <p class="text-white font-medium text-sm">Modern ATS Clean</p>
+                            <p class="text-dark-400 text-xs">Clean, professional, ATS-friendly — best for most jobs</p>
+                        </div>
+                    </label>
+                    <label
+                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
+                        <input type="radio" name="template" value="minimal_academic" class="w-4 h-4 text-primary-500">
+                        <div>
+                            <p class="text-white font-medium text-sm">Minimal Academic</p>
+                            <p class="text-dark-400 text-xs">Minimalist style for academic & research positions</p>
+                        </div>
+                    </label>
+                    <label
+                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
+                        <input type="radio" name="template" value="corporate_executive"
+                            class="w-4 h-4 text-primary-500">
+                        <div>
+                            <p class="text-white font-medium text-sm">Corporate Executive</p>
+                            <p class="text-dark-400 text-xs">Executive style for senior & management roles</p>
+                        </div>
+                    </label>
+                    <label
+                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
+                        <input type="radio" name="template" value="creative_designer" class="w-4 h-4 text-primary-500">
+                        <div>
+                            <p class="text-white font-medium text-sm">Creative Designer</p>
+                            <p class="text-dark-400 text-xs">Creative flair for design & marketing roles</p>
+                        </div>
+                    </label>
+                    <label
+                        class="flex items-center gap-4 p-4 rounded-lg bg-dark-800/40 border border-dark-600/30 cursor-pointer hover:border-primary-500/50 transition-colors has-[:checked]:border-primary-500 has-[:checked]:bg-primary-500/10">
+                        <input type="radio" name="template" value="technical_developer"
+                            class="w-4 h-4 text-primary-500">
+                        <div>
+                            <p class="text-white font-medium text-sm">Technical Developer</p>
+                            <p class="text-dark-400 text-xs">Optimized for software engineering & tech roles</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <a href="{% url 'dashboard' %}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary px-8 py-2.5">Create Resume →</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

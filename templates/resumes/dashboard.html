@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Sidebar + Content Layout -->
+<div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 glass border-r border-dark-700/50 flex flex-col fixed h-full z-40">
+        <div class="p-5 border-b border-dark-700/50">
+            <a href="/" class="flex items-center gap-2">
+                <div
+                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <span class="text-lg font-bold text-white">Resume<span class="gradient-text">Forge</span></span>
+            </a>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="{% url 'dashboard' %}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-500/10 text-primary-300 text-sm font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Dashboard
+            </a>
+            <a href="{% url 'profile_setup' %}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-700/50 text-sm transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Profile
+            </a>
+            <a href="{% url 'settings' %}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-700/50 text-sm transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-dark-700/50">
+            <div class="flex items-center gap-3 mb-3">
+                {% if request.user.profile_image %}
+                <img src="{{ request.user.profile_image.url }}" class="w-8 h-8 rounded-full object-cover">
+                {% else %}
+                <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white text-sm font-bold">
+                    {{ request.user.first_name|first|default:request.user.email|first|upper }}
+                </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">{{ request.user.full_name }}</p>
+                    <p class="text-xs text-dark-400 truncate">{{ request.user.email }}</p>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}"
+                class="flex items-center gap-2 px-3 py-2 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 text-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign Out
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 p-8">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Your Resumes</h1>
+                <p class="text-dark-400 text-sm mt-1">Create, edit, and manage your professional resumes</p>
+            </div>
+            <a href="{% url 'create_resume' %}" class="btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                New Resume
+            </a>
+        </div>
+
+        {% if not request.user.is_profile_complete %}
+        <div class="card mb-8 border-primary-500/30"
+            style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(16,185,129,0.05));">
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-xl bg-primary-500/20 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold mb-1">Complete Your Profile</h3>
+                    <p class="text-dark-400 text-sm mb-3">Fill in your details to let AI generate optimized resumes from
+                        your data.</p>
+                    <a href="{% url 'profile_setup' %}" class="btn-primary text-sm py-1.5 px-4">Complete Profile →</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Resume Grid -->
+        {% if resumes %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for resume in resumes %}
+            <div class="card group cursor-pointer" onclick="window.location='{% url 'resume_builder' resume.id %}'">
+                <!-- Template preview placeholder -->
+                <div
+                    class="w-full h-40 rounded-lg bg-dark-800/80 border border-dark-600/30 mb-4 flex items-center justify-center overflow-hidden">
+                    <div class="text-center">
+                        <svg class="w-10 h-10 text-dark-500 mx-auto mb-2" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span class="text-xs text-dark-500">{{ resume.get_template_name_display }}</span>
+                    </div>
+                </div>
+
+                <h3 class="text-white font-semibold mb-1 group-hover:text-primary-300 transition-colors">{{ resume.title }}</h3>
+                <p class="text-dark-400 text-xs">Updated {{ resume.updated_at|timesince }} ago</p>
+
+                <div class="flex items-center gap-2 mt-3 pt-3 border-t border-dark-600/30">
+                    <a href="{% url 'resume_builder' resume.id %}"
+                        class="text-xs text-primary-400 hover:text-primary-300">Edit</a>
+                    <span class="text-dark-600">·</span>
+                    <form method="post" action="{% url 'duplicate_resume' resume.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs text-dark-400 hover:text-white">Duplicate</button>
+                    </form>
+                    <span class="text-dark-600">·</span>
+                    <form method="post" action="{% url 'delete_resume' resume.id %}" class="inline"
+                        onsubmit="return confirm('Delete this resume permanently?')">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs text-red-400 hover:text-red-300">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card text-center py-16">
+            <svg class="w-16 h-16 text-dark-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="text-xl font-semibold text-white mb-2">No resumes yet</h3>
+            <p class="text-dark-400 text-sm mb-6">Create your first AI-powered resume in seconds</p>
+            <a href="{% url 'create_resume' %}" class="btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create Resume
+            </a>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

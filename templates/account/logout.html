@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Logged Out{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-6">
+    <div class="text-center animate-slide-up">
+        <div
+            class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-white mb-2">You've been signed out</h2>
+        <p class="text-dark-400 mb-6">Thanks for using ResumeForge AI</p>
+        <a href="{% url 'login' %}" class="btn-primary">Sign In Again</a>
+    </div>
+</div>
+{% endblock %}
