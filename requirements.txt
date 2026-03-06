@@ -9,3 +9,4 @@ gunicorn==23.0.0
 whitenoise==6.8.2
 django-ratelimit==4.1.0
 PyPDF2==3.0.1
+django-jazzmin==3.0.3

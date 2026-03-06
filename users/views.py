@@ -12,6 +12,13 @@ from .forms import (
     CustomUserCreationForm, UserProfileForm, ProfileImageForm, CVUploadForm,
     EducationFormSet, ExperienceFormSet, SkillFormSet, CertificationFormSet, ProjectFormSet
 )
+from allauth.account.models import EmailAddress
+from .utils import send_otp_email, send_raw_otp_email
+from .models import EmailOTP
+import random
+import string
+import time
+from django.utils import timezone
 
 
 def landing_page(request):
@@ -21,6 +28,10 @@ def landing_page(request):
     return render(request, 'landing.html')
 
 
+def account_suspended(request):
+    """Dedicated page shown when a blocked user tries to log in."""
+    return render(request, 'users/account_suspended.html')
+
 def register_view(request):
     """User registration with email/password."""
     if request.user.is_authenticated:
@@ -28,10 +39,28 @@ def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            messages.success(request, 'Account created! Please complete your profile.')
-            return redirect('profile_setup')
+            email = form.cleaned_data.get('email')
+            first_name = form.cleaned_data.get('first_name', '')
+            last_name = form.cleaned_data.get('last_name', '')
+            password = request.POST.get('password1')
+            
+            otp_code = ''.join(random.choices(string.digits, k=6))
+            
+            request.session['pending_registration'] = {
+                'email': email,
+                'first_name': first_name,
+                'last_name': last_name,
+                'password': password,
+            }
+            request.session['registration_otp'] = otp_code
+            request.session['registration_otp_time'] = timezone.now().timestamp()
+            
+            if send_raw_otp_email(email, first_name, otp_code):
+                messages.success(request, 'Please check your email for the verification code to complete your registration.')
+                return redirect('verify_email_otp')
+            else:
+                messages.error(request, 'Failed to send verification email. Please try again.')
+                return redirect('register')
         else:
             messages.error(request, 'Please fix the errors below.')
     else:
@@ -48,12 +77,35 @@ def login_view(request):
         password = request.POST.get('password', '')
         user = authenticate(request, username=email, password=password)
         if user is not None:
+            # Check if user is blocked
+            if user.is_blocked:
+                return redirect('account_suspended')
+            
+            # Check if email is verified
+            email_address = EmailAddress.objects.filter(user=user, email=email).first()
+            if email_address and not email_address.verified:
+                send_otp_email(user)
+                request.session['verification_user_id'] = user.id
+                messages.error(request, 'Please verify your email address to sign in. A new 6-digit code has been sent to your inbox.')
+                return redirect('verify_email_otp')
+
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            
+            # Track login stats
+            user.login_count += 1
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                user.last_login_ip = x_forwarded_for.split(',')[0].strip()
+            else:
+                user.last_login_ip = request.META.get('REMOTE_ADDR')
+            user.save(update_fields=['login_count', 'last_login_ip'])
+            
             next_url = request.GET.get('next', '/dashboard/')
             return redirect(next_url)
         else:
-            messages.error(request, 'Invalid email or password.')
+            messages.error(request, 'Invalid email or password. Please check your credentials and try again.')
     return render(request, 'users/login.html')
+
 
 
 @login_required
@@ -112,6 +164,8 @@ def profile_setup(request):
         certification_formset = CertificationFormSet(instance=profile, prefix='certification')
         project_formset = ProjectFormSet(instance=profile, prefix='project')
 
+    just_verified = request.session.pop('just_verified', False)
+
     context = {
         'profile_form': profile_form,
         'image_form': image_form,
@@ -120,6 +174,7 @@ def profile_setup(request):
         'skill_formset': skill_formset,
         'certification_formset': certification_formset,
         'project_formset': project_formset,
+        'just_verified': just_verified,
     }
     return render(request, 'users/profile_setup.html', context)
 
@@ -139,3 +194,94 @@ def delete_account(request):
     user.delete()
     messages.success(request, 'Your account has been permanently deleted.')
     return redirect('landing')
+
+def verify_email_otp(request):
+    """View to handle submitting the 6-digit OTP."""
+    user_id = request.session.get('verification_user_id')
+    pending_reg = request.session.get('pending_registration')
+    
+    if not user_id and not pending_reg:
+        messages.error(request, 'Verification session expired. Please log in or register again.')
+        return redirect('login')
+    
+    if request.method == 'POST':
+        otp_input = request.POST.get('otp', '').strip()
+        
+        if pending_reg:
+            expected_otp = request.session.get('registration_otp')
+            otp_time = request.session.get('registration_otp_time', 0)
+            
+            if time.time() - otp_time > 900:  # 15 mins
+                messages.error(request, 'Verification code expired. Please request a new one.')
+            elif otp_input == expected_otp:
+                # Actually create the user in DB now
+                user = CustomUser.objects.create_user(
+                    email=pending_reg['email'],
+                    password=pending_reg['password'],
+                    first_name=pending_reg['first_name'],
+                    last_name=pending_reg['last_name']
+                )
+                EmailAddress.objects.create(user=user, email=user.email, primary=True, verified=True)
+                
+                # Clean up session
+                del request.session['pending_registration']
+                del request.session['registration_otp']
+                del request.session['registration_otp_time']
+                
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                request.session['just_verified'] = True
+                messages.success(request, "Account created and verified successfully! Let's set up your profile.")
+                return redirect('profile_setup')
+            else:
+                messages.error(request, 'Invalid verification code.')
+                
+        elif user_id:
+            user = get_object_or_404(CustomUser, id=user_id)
+            valid_otp = EmailOTP.objects.filter(user=user, code=otp_input, is_used=False).first()
+            
+            if valid_otp and valid_otp.is_valid():
+                valid_otp.is_used = True
+                valid_otp.save()
+                EmailAddress.objects.filter(user=user).update(verified=True)
+                del request.session['verification_user_id']
+                
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                messages.success(request, 'Email verified successfully! Welcome.')
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid or expired verification code.')
+            
+    # Determine which email to show on the UI
+    display_email = pending_reg['email'] if pending_reg else CustomUser.objects.get(id=user_id).email
+            
+    return render(request, 'users/verify_otp.html', {'email_to_verify': display_email})
+
+@require_POST
+def resend_otp(request):
+    """View to resend OTP email."""
+    user_id = request.session.get('verification_user_id')
+    pending_reg = request.session.get('pending_registration')
+    
+    if not user_id and not pending_reg:
+        messages.error(request, 'Verification session expired. Please log in or register again.')
+        return redirect('login')
+        
+    if pending_reg:
+        otp_code = ''.join(random.choices(string.digits, k=6))
+        request.session['registration_otp'] = otp_code
+        request.session['registration_otp_time'] = timezone.now().timestamp()
+        
+        if send_raw_otp_email(pending_reg['email'], pending_reg['first_name'], otp_code):
+            messages.success(request, 'A new verification code has been sent to your email.')
+        else:
+            messages.error(request, 'Failed to send verification code. Please try again later.')
+            
+    elif user_id:
+        user = get_object_or_404(CustomUser, id=user_id)
+        if send_otp_email(user):
+            messages.success(request, 'A new verification code has been sent to your email.')
+        else:
+            messages.error(request, 'Failed to send verification code. Please try again later.')
+        
+    return redirect('verify_email_otp')
+

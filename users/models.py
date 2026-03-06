@@ -4,6 +4,8 @@ Custom User model and Profile models for the AI Resume Builder.
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 from django.utils import timezone
+import random
+import string
 
 
 class CustomUserManager(BaseUserManager):
@@ -36,11 +38,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_blocked = models.BooleanField(default=False, help_text='Block user from accessing the platform')
     api_daily_limit = models.PositiveIntegerField(
         default=0,
-        help_text='Custom daily AI generation limit. 0 = use system default (5)'
+        help_text='Custom daily AI prompt limit. 0 = use system default (5)'
+    )
+    resume_daily_limit = models.PositiveIntegerField(
+        default=0,
+        help_text='Custom daily resume creation limit. 0 = use system default (1)'
     )
     login_count = models.PositiveIntegerField(default=0, help_text='Total number of logins')
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+    last_activity = models.DateTimeField(null=True, blank=True, help_text='Last time the user made any request')
     date_joined = models.DateTimeField(default=timezone.now)
+
+    # Tracking daily limits independently of database objects
+    resumes_created_today = models.PositiveIntegerField(default=0)
+    last_resume_creation_date = models.DateField(null=True, blank=True)
 
     objects = CustomUserManager()
 
@@ -57,6 +68,31 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'.strip() or self.email
+
+    def get_resume_daily_limit(self):
+        """Effective daily resume limit for this user."""
+        return self.resume_daily_limit if self.resume_daily_limit > 0 else 1
+
+    def get_ai_daily_limit(self):
+        """Effective daily AI prompt limit for this user."""
+        return self.api_daily_limit if self.api_daily_limit > 0 else 5
+
+    def can_create_resume_today(self):
+        """Check if user can create a resume today based on their personal limit."""
+        today = timezone.now().date()
+        if self.last_resume_creation_date != today:
+            return True
+        return self.resumes_created_today < self.get_resume_daily_limit()
+
+    def increment_resume_creation(self):
+        """Record that a user created a resume today."""
+        today = timezone.now().date()
+        if self.last_resume_creation_date != today:
+            self.last_resume_creation_date = today
+            self.resumes_created_today = 1
+        else:
+            self.resumes_created_today += 1
+        self.save()
 
 
 class UserProfile(models.Model):
@@ -75,6 +111,32 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f'Profile: {self.user.email}'
+
+
+class EmailOTP(models.Model):
+    """Stores 6-digit OTP codes for email verification."""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='otps')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def is_valid(self):
+        """OTP is valid for 15 minutes and only if not used."""
+        if self.is_used:
+            return False
+        expiration_time = self.created_at + timezone.timedelta(minutes=15)
+        return timezone.now() <= expiration_time
+
+    @classmethod
+    def generate_otp(cls, user):
+        """Generates a secure 6-digit OTP for the user."""
+        # Invalidate old OTPs
+        cls.objects.filter(user=user, is_used=False).update(is_used=True)
+        code = ''.join(random.choices(string.digits, k=6))
+        return cls.objects.create(user=user, code=code)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.code}"
 
 
 class Education(models.Model):
@@ -164,3 +226,23 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+# Signals for handling cascaded deletions from Allauth models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+from allauth.account.models import EmailAddress
+from django.contrib.auth import get_user_model
+
+@receiver(post_delete, sender=EmailAddress)
+def delete_user_on_email_delete(sender, instance, **kwargs):
+    """
+    If an EmailAddress is deleted from the admin panel, delete the associated User 
+    if they have no other email addresses left. This matches the intuition that 
+    deleting a user's primary/only email address deletes the user account.
+    """
+    user = instance.user
+    if user and user.pk:
+        User = get_user_model()
+        if User.objects.filter(pk=user.pk).exists():
+            if not EmailAddress.objects.filter(user=user).exists():
+                user.delete()

@@ -25,6 +25,22 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['password1'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Password'})
         self.fields['password2'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Confirm Password'})
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        
+        # Use centralized professional email validation (includes tempmail block and Gmail normalization)
+        from .adapters import validate_professional_email
+        try:
+            email = validate_professional_email(email)
+        except forms.ValidationError as e:
+            raise e
+            
+        # Check for duplicate email using the NORMALIZED email
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("An account with this email address already exists. Please sign in instead.")
+            
+        return email
+
 
 class UserProfileForm(forms.ModelForm):
     """Profile completion form."""

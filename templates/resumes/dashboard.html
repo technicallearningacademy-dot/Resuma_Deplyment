@@ -82,12 +82,22 @@
                 <h1 class="text-2xl font-bold text-white">Your Resumes</h1>
                 <p class="text-dark-400 text-sm mt-1">Create, edit, and manage your professional resumes</p>
             </div>
+            {% if can_create_resume %}
             <a href="{% url 'create_resume' %}" class="btn-primary">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 New Resume
             </a>
+            {% else %}
+            <button disabled class="btn-primary opacity-50 cursor-not-allowed"
+                title="Daily limit reached (1/day). Please try again tomorrow.">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Daily Limit Reached
+            </button>
+            {% endif %}
         </div>
 
         {% if not request.user.is_profile_complete %}
@@ -176,6 +186,7 @@
                     <div class="flex items-center gap-2">
                         <form method="post" action="{% url 'duplicate_resume' resume.id %}" class="inline m-0">
                             {% csrf_token %}
+                            {% if can_create_resume %}
                             <button type="submit"
                                 class="flex items-center gap-1 text-xs px-2 py-1.5 rounded-md text-dark-300 hover:bg-dark-700 hover:text-white transition-colors"
                                 title="Duplicate Resume">
@@ -185,6 +196,17 @@
                                 </svg>
                                 Duplicate
                             </button>
+                            {% else %}
+                            <button disabled type="button"
+                                class="flex items-center gap-1 text-xs px-2 py-1.5 rounded-md text-dark-500 opacity-50 cursor-not-allowed"
+                                title="Daily limit reached (1/day). Cannot duplicate today.">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Duplicate
+                            </button>
+                            {% endif %}
                         </form>
 
                         <form method="post" action="{% url 'delete_resume' resume.id %}" class="inline m-0"
@@ -212,12 +234,21 @@
             </svg>
             <h3 class="text-xl font-semibold text-white mb-2">No resumes yet</h3>
             <p class="text-dark-400 text-sm mb-6">Create your first AI-powered resume in seconds</p>
+            {% if can_create_resume %}
             <a href="{% url 'create_resume' %}" class="btn-primary">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 Create Resume
             </a>
+            {% else %}
+            <button disabled class="btn-primary opacity-50 cursor-not-allowed" title="Daily limit reached.">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Daily Limit Reached
+            </button>
+            {% endif %}
         </div>
         {% endif %}
     </main>

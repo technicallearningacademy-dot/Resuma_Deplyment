@@ -9,6 +9,7 @@ from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils import timezone
 from .models import Resume, ResumeVersion, UploadedCV
 
 
@@ -16,12 +17,24 @@ from .models import Resume, ResumeVersion, UploadedCV
 def dashboard(request):
     """Main dashboard showing user's resumes."""
     resumes = Resume.objects.filter(user=request.user, is_active=True)
-    return render(request, 'resumes/dashboard.html', {'resumes': resumes})
+    
+    # Check if user can create a new resume today using User model tracker
+    can_create_resume = request.user.can_create_resume_today()
+    
+    return render(request, 'resumes/dashboard.html', {
+        'resumes': resumes,
+        'can_create_resume': can_create_resume
+    })
 
 
 @login_required
 def create_resume(request):
-    """Create a new resume."""
+    """Create a new resume (limited to 1 per day per user)."""
+    # Restrict using the User model persistent tracker
+    if not request.user.can_create_resume_today():
+        messages.error(request, 'You have reached your limit of creating 1 resume per day. Please try again tomorrow.')
+        return redirect('dashboard')
+
     if request.method == 'POST':
         title = request.POST.get('title', 'Untitled Resume')
         template = request.POST.get('template', 'modern_ats_clean')
@@ -30,6 +43,10 @@ def create_resume(request):
             title=title,
             template_name=template,
         )
+        
+        # Record the creation so limits persist even if deleted
+        request.user.increment_resume_creation()
+        
         messages.success(request, f'Resume "{title}" created!')
         return redirect('resume_builder', resume_id=resume.id)
     return render(request, 'resumes/create.html')
@@ -38,7 +55,12 @@ def create_resume(request):
 @login_required
 def resume_builder(request, resume_id):
     """Split-screen resume builder with editor and preview."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        messages.error(request, "The resume you are looking for does not exist or you do not have permission to access it.")
+        return redirect('dashboard')
+    
     versions = resume.versions.all()[:10]
 
     # Get user profile data for template filling
@@ -79,7 +101,10 @@ def resume_builder(request, resume_id):
 @require_POST
 def save_resume(request, resume_id):
     """Save resume content and create version."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Resume not found.'}, status=404)
 
     latex_content = request.POST.get('latex_content', '')
     template_name = request.POST.get('template_name', resume.template_name)
@@ -106,7 +131,11 @@ def save_resume(request, resume_id):
 @login_required
 def resume_history(request, resume_id):
     """View version history for a resume."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        messages.error(request, "The resume you are looking for does not exist or you do not have permission to access it.")
+        return redirect('dashboard')
     versions = resume.versions.all()
     return render(request, 'resumes/history.html', {'resume': resume, 'versions': versions})
 
@@ -115,8 +144,12 @@ def resume_history(request, resume_id):
 @require_POST
 def rollback_version(request, resume_id, version_id):
     """Rollback to a previous version."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
-    version = get_object_or_404(ResumeVersion, id=version_id, resume=resume)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+        version = ResumeVersion.objects.get(id=version_id, resume=resume)
+    except (Resume.DoesNotExist, ResumeVersion.DoesNotExist):
+        messages.error(request, "The resume or version you are looking for does not exist.")
+        return redirect('dashboard')
 
     resume.latex_content = version.latex_content
     resume.save()
@@ -128,14 +161,26 @@ def rollback_version(request, resume_id, version_id):
 @login_required
 @require_POST
 def duplicate_resume(request, resume_id):
-    """Duplicate a resume."""
-    original = get_object_or_404(Resume, id=resume_id, user=request.user)
+    """Duplicate a resume (limited to 1 per day per user)."""
+    if not request.user.can_create_resume_today():
+        messages.error(request, 'You have reached your limit of creating/duplicating 1 resume per day. Please try again tomorrow.')
+        return redirect('dashboard')
+
+    try:
+        original = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        messages.error(request, "The resume you are trying to duplicate does not exist.")
+        return redirect('dashboard')
     new_resume = Resume.objects.create(
         user=request.user,
         title=f'{original.title} (Copy)',
         template_name=original.template_name,
         latex_content=original.latex_content,
     )
+    
+    # Record the creation so limits persist even if deleted
+    request.user.increment_resume_creation()
+    
     messages.success(request, f'Resume duplicated as "{new_resume.title}"')
     return redirect('resume_builder', resume_id=new_resume.id)
 
@@ -144,7 +189,11 @@ def duplicate_resume(request, resume_id):
 @require_POST
 def delete_resume(request, resume_id):
     """Delete a resume permanently."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        messages.error(request, "The resume you are trying to delete does not exist.")
+        return redirect('dashboard')
     resume.delete()
     messages.success(request, 'Resume deleted.')
     return redirect('dashboard')
@@ -154,7 +203,10 @@ def delete_resume(request, resume_id):
 @xframe_options_exempt
 def preview_resume_pdf(request, resume_id):
     """Generate and return a PDF for live preview without saving."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        return HttpResponse("Resume not found.", status=404)
     
     latex_content = ''
     if request.method == 'POST':
@@ -183,7 +235,11 @@ def preview_resume_pdf(request, resume_id):
 @login_required
 def download_resume(request, resume_id, file_format):
     """Download resume as PDF or DOCX."""
-    resume = get_object_or_404(Resume, id=resume_id, user=request.user)
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+    except Resume.DoesNotExist:
+        messages.error(request, "The resume you are trying to download does not exist.")
+        return redirect('dashboard')
 
     if file_format == 'pdf':
         # Generate PDF from LaTeX

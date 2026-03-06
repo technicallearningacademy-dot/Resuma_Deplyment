@@ -9,7 +9,11 @@ from django.contrib import messages
 
 
 class BlockedUserMiddleware:
-    """Prevent blocked users from accessing any page. Log them out and redirect."""
+    """
+    Prevent blocked users from accessing any page.
+    Log them out immediately and send them to the suspension page.
+    Works for BOTH email login AND Google OAuth users.
+    """
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -20,19 +24,19 @@ class BlockedUserMiddleware:
             and not request.user.is_staff
             and getattr(request.user, 'is_blocked', False)
         ):
+            from django.contrib.auth import logout
             logout(request)
-            messages.error(
-                request,
-                'Your account has been suspended. Please contact support.'
-            )
-            return redirect('account_login')
+            # Redirect to the professional suspension page (not a generic login page)
+            return redirect('account_suspended')
 
         response = self.get_response(request)
         return response
 
 
 class TrackLastIPMiddleware:
-    """Track the user's last seen IP address on every request."""
+    """Track the user's last seen IP address and last activity time on every request."""
+
+    ACTIVITY_UPDATE_INTERVAL = 30  # seconds between DB writes
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -40,17 +44,26 @@ class TrackLastIPMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        # Only track IP for authenticated, non-staff users
         if request.user.is_authenticated:
+            from django.utils import timezone
             from django.contrib.auth import get_user_model
             User = get_user_model()
             ip = self._get_client_ip(request)
-            try:
-                # Only write to DB if IP has changed (avoids write on every request)
+            now = timezone.now()
+
+            # Throttle: only write to DB at most once every 30 seconds
+            last_tracked = request.session.get('_last_activity_tracked', 0)
+            if (now.timestamp() - last_tracked) > self.ACTIVITY_UPDATE_INTERVAL:
+                update_fields = {}
                 if request.user.last_login_ip != ip:
-                    User.objects.filter(pk=request.user.pk).update(last_login_ip=ip)
-            except Exception:
-                pass  # Never crash on IP tracking
+                    update_fields['last_login_ip'] = ip
+                update_fields['last_activity'] = now
+                try:
+                    if update_fields:
+                        User.objects.filter(pk=request.user.pk).update(**update_fields)
+                except Exception:
+                    pass  # Never crash on activity tracking
+                request.session['_last_activity_tracked'] = now.timestamp()
 
         return response
 

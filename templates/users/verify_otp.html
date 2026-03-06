@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Verify Email{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4">
+    <div class="card w-full max-w-md p-8 relative overflow-hidden group">
+        <!-- Glow effect -->
+        <div
+            class="absolute -inset-0.5 bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl opacity-20 group-hover:opacity-40 blur transition duration-1000 group-hover:duration-200">
+        </div>
+
+        <div class="relative bg-dark-800 rounded-xl p-8">
+            <div class="text-center mb-8 bg-dark-800/80 backdrop-blur-sm rounded-xl py-6 px-4">
+                <!-- Icon -->
+                <div
+                    class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary-500/30 transform transition-transform group-hover:scale-105">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
+                <p class="text-dark-300 text-sm">We sent a 6-digit code to <br><span
+                        class="text-primary-300 font-semibold">{{ email_to_verify }}</span></p>
+            </div>
+
+            <form method="POST" action="{% url 'verify_email_otp' %}" class="space-y-6">
+                {% csrf_token %}
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-dark-200 mb-2" for="otp">Verification Code</label>
+                    <input type="text" name="otp" id="otp" required
+                        class="form-input w-full text-center text-2xl tracking-[0.7em] font-bold py-4 rounded-xl border border-dark-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-dark-900/50 text-white placeholder-dark-400"
+                        placeholder="000000" maxlength="6" pattern="\d{6}">
+                </div>
+
+                <button type="submit" class="btn-primary w-full py-3.5 text-base font-semibold">
+                    Verify Code
+                </button>
+            </form>
+
+            <div class="mt-8 text-center border-t border-dark-600/50 pt-6">
+                <p class="text-dark-400 text-sm mb-2">Didn't receive the code?</p>
+                <form method="POST" action="{% url 'resend_otp' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="text-primary-400 hover:text-primary-300 font-medium text-sm transition-colors hover:underline">
+                        Resend Code
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

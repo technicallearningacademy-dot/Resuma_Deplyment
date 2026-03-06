@@ -7,8 +7,7 @@
   <img src="https://img.shields.io/badge/LaTeX-Powered-red?style=for-the-badge&logo=latex" />
   <img src="https://img.shields.io/badge/License-MIT-purple?style=for-the-badge" />
 </p>
-
-> **A full-stack AI-powered resume builder** that generates professional, ATS-optimized LaTeX resumes from your profile — with live PDF preview, 5 beautiful templates, and multi-model AI with automatic fallback.
+> **A full-stack AI-powered resume builder** that generates professional, ATS-optimized LaTeX resumes from your profile — with live PDF preview, 10 beautiful templates, and multi-model AI with automatic fallback.
 
 ---
 
@@ -29,7 +28,7 @@
 - Generates complete, valid LaTeX from your profile in seconds
 - Custom prompt support for role-specific optimization
 
-### 📄 5 Professional Templates
+### 📄 10 Professional Templates
 | Template | Style |
 |----------|-------|
 | **Modern ATS Clean** | Navy blue, Helvetica, FontAwesome icons |
@@ -38,7 +37,7 @@
 | **Creative Designer** | Teal color-block sections, vibrant sans-serif |
 | **Technical Developer** | Dark terminal theme, monospace, code aesthetic |
 
-All 5 templates are **pre-tested** and verified to compile against the `texlive.net` LaTeX compiler.
+All 10 templates are **pre-tested** and verified to compile against the `texlive.net` LaTeX compiler.
 
 ### 🖥 Live PDF Preview
 - Split-screen editor: write LaTeX on the left, see compiled PDF on the right
@@ -97,7 +96,7 @@ AI_Resuma_Builder/
 ├── ai_services/              # AI generation logic
 │   ├── client.py             # Gemini + HuggingFace client with fallback
 │   ├── prompts.py            # Prompt templates for all AI operations
-│   ├── template_library.py   # 5 pre-tested LaTeX template skeletons
+│   ├── template_library.py   # 10 pre-tested LaTeX template skeletons
 │   ├── rate_limiter.py       # Per-user daily API call limits
 │   ├── views.py              # AI AJAX endpoints (/ai/generate/, /ai/enhance/, /ai/optimize/)
 │   └── urls.py               # AI URL routing
@@ -205,10 +204,11 @@ python manage.py createsuperuser
 
 ### 7. Run the Development Server
 ```bash
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 ```
 
-Visit **http://127.0.0.1:8000** in your browser.
+Visit **http://127.0.0.1:8000** in your browser on the host machine.
+To access the app from another device on the same local network (LAN), find your machine's local IP address (e.g. `192.168.1.X`) and visit **http://<YOUR_LAN_IP>:8000**.
 
 ---
 

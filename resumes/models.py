@@ -64,6 +64,24 @@ class ResumeVersion(models.Model):
         return f'{self.resume.title} v{self.version_number}'
 
 
+class ResumeChatMessage(models.Model):
+    """Stores chat history for conversational AI resume editing."""
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('model', 'AI Model'),
+    ]
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name='chat_messages')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.resume.title} - {self.role} - {self.created_at}'
+
+
 class AIPromptLog(models.Model):
     """Logs AI interactions for debugging and history."""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ai_logs')

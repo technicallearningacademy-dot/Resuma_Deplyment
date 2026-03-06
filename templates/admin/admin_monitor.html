@@ -1,0 +1,736 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Monitor — ResumeForge Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg2: #161b22;
+            --bg3: #21262d;
+            --border: #30363d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --green: #3fb950;
+            --red: #f85149;
+            --yellow: #d29922;
+            --blue: #58a6ff;
+            --purple: #a5a0f9;
+            --orange: #f0883e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .badge {
+            background: var(--green);
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.6
+            }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .refresh-info {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 500;
+        }
+
+        .btn-admin {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: border-color .2s;
+        }
+
+        .btn-admin:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        /* Stats grid */
+        .container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color .2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--blue);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .stat-card.green::before {
+            background: var(--green);
+        }
+
+        .stat-card.red::before {
+            background: var(--red);
+        }
+
+        .stat-card.blue::before {
+            background: var(--blue);
+        }
+
+        .stat-card.yellow::before {
+            background: var(--yellow);
+        }
+
+        .stat-card.purple::before {
+            background: var(--purple);
+        }
+
+        .stat-card.orange::before {
+            background: var(--orange);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        .stat-value.red {
+            color: var(--red);
+        }
+
+        .stat-value.blue {
+            color: var(--blue);
+        }
+
+        .stat-value.yellow {
+            color: var(--yellow);
+        }
+
+        .stat-value.purple {
+            color: var(--purple);
+        }
+
+        .stat-value.orange {
+            color: var(--orange);
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* Tables */
+        .section {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-count {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 10px 16px;
+            font-size: 11px;
+            color: var(--muted);
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 500;
+        }
+
+        td {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid #1c2128;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, .02);
+        }
+
+        /* Status badges */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status.online {
+            background: rgba(63, 185, 80, .15);
+            color: var(--green);
+            border: 1px solid rgba(63, 185, 80, .3);
+        }
+
+        .status.offline {
+            background: rgba(139, 148, 158, .1);
+            color: var(--muted);
+            border: 1px solid rgba(139, 148, 158, .2);
+        }
+
+        .status.blocked {
+            background: rgba(248, 81, 73, .15);
+            color: var(--red);
+            border: 1px solid rgba(248, 81, 73, .3);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .online .dot {
+            animation: pulse 1.5s infinite;
+        }
+
+        .email-link {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .email-link:hover {
+            text-decoration: underline;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .tag {
+            font-size: 11px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--muted);
+        }
+
+        .counter {
+            font-weight: 600;
+            color: var(--blue);
+        }
+
+        /* Limit editor */
+        .limit-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .limit-input {
+            width: 52px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 3px 7px;
+            font-size: 12px;
+            font-family: inherit;
+            text-align: center;
+            transition: border-color .2s;
+        }
+
+        .limit-input:focus {
+            outline: none;
+            border-color: var(--blue);
+        }
+
+        .btn-save {
+            background: var(--blue);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity .2s;
+            white-space: nowrap;
+        }
+
+        .btn-save:hover {
+            opacity: .85;
+        }
+
+        .btn-save.saved {
+            background: var(--green);
+        }
+
+        .btn-save.error {
+            background: var(--red);
+            color: #fff;
+        }
+
+        /* No data */
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Online indicator */
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hide-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <span class="logo">📊 Live Monitor</span>
+            <span class="badge">● LIVE</span>
+        </div>
+        <div class="header-right">
+            <span class="refresh-info">Auto-refresh every 10s</span>
+            <span class="last-updated" id="last-updated">Updated: {{ last_updated }}</span>
+            <span class="spinner" id="spinner" style="display:none"></span>
+            <a href="/admin/" class="btn-admin">← Admin Panel</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card green">
+                <div class="stat-label">🟢 Online Now</div>
+                <div class="stat-value green" id="stat-online">{{ online_users }}</div>
+                <div class="stat-sub">Active in last 5 min</div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-label">👥 Total Users</div>
+                <div class="stat-value blue" id="stat-total">{{ total_users }}</div>
+                <div class="stat-sub">All registered</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-label">🆕 Joined Today</div>
+                <div class="stat-value yellow" id="stat-new">{{ new_today }}</div>
+                <div class="stat-sub">New sign-ups</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-label">🚫 Blocked</div>
+                <div class="stat-value red" id="stat-blocked">{{ blocked_users }}</div>
+                <div class="stat-sub">Suspended accounts</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">📄 Resumes Today</div>
+                <div class="stat-value purple" id="stat-resumes">{{ resumes_today }}</div>
+                <div class="stat-sub">Created today</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-label">⚡ AI Calls Today</div>
+                <div class="stat-value orange" id="stat-ai">{{ ai_today }}</div>
+                <div class="stat-sub">Total: {{ ai_total }}</div>
+            </div>
+        </div>
+
+        <!-- Live User Activity Table -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span class="live-dot"></span>
+                    Live User Activity
+                </div>
+                <span class="section-count" id="user-count">Showing {{ users_data|length }} users</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Last Seen</th>
+                            <th class="hide-mobile">IP Address</th>
+                            <th>Logins</th>
+                            <th>Resumes</th>
+                            <th>⚡ AI Limit/day</th>
+                            <th>📄 Resume Limit/day</th>
+                            <th class="hide-mobile">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr>
+                            <td colspan="9" class="empty">
+                                <span class="spinner" style="display:inline-block;margin-right:8px;"></span>
+                                Loading live data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent AI Usage -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">⚡ Recent AI Activity</div>
+                <span class="section-count">Last 15 events</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Type</th>
+                            <th>Model</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ai-tbody">
+                        <tr>
+                            <td colspan="4" class="empty">
+                                <span class="spinner" style="display:inline-block;margin-right:8px;"></span>
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = '/admin-monitor/api/';
+        let refreshInterval = null;
+
+        function updateStats(data) {
+            // Update stat cards
+            const fields = {
+                'stat-online': data.online_users,
+                'stat-total': data.total_users,
+                'stat-new': data.new_today,
+                'stat-blocked': data.blocked_users,
+                'stat-resumes': data.resumes_today,
+                'stat-ai': data.ai_today,
+            };
+            for (const [id, val] of Object.entries(fields)) {
+                const el = document.getElementById(id);
+                if (el && el.textContent != String(val)) {
+                    el.textContent = val;
+                    el.style.transform = 'scale(1.1)';
+                    el.style.transition = 'transform .15s';
+                    setTimeout(() => el.style.transform = 'scale(1)', 200);
+                }
+            }
+
+            if (tbody && data.users_data) {
+                document.getElementById('user-count').textContent = `Showing ${data.users_data.length} users`;
+                const currentFocused = document.activeElement;
+                const isFocusedInTable = tbody.contains(currentFocused);
+                // Don't re-render table if user is actively editing a limit input
+                if (!isFocusedInTable) {
+                    tbody.innerHTML = data.users_data.map(u => {
+                        let statusBadge = '';
+                        if (u.is_blocked) {
+                            statusBadge = '<span class="status blocked"><span class="dot"></span>Blocked</span>';
+                        } else if (u.is_online) {
+                            statusBadge = '<span class="status online"><span class="dot"></span>Online</span>';
+                        } else {
+                            statusBadge = '<span class="status offline"><span class="dot"></span>Offline</span>';
+                        }
+                        return `<tr>
+                    <td>
+                        <span class="email-link">${u.email}</span>
+                        ${u.name !== u.email ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${u.name}</div>` : ''}
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>${u.last_seen}</td>
+                    <td class="hide-mobile muted">${u.last_ip}</td>
+                    <td><span class="counter">${u.login_count}</span></td>
+                    <td><span class="counter">${u.resumes}</span></td>
+                    <td>
+                        <div class="limit-cell">
+                            <input type="number" class="limit-input" value="${u.ai_limit_effective}" min="1" max="999">
+                            <span style="font-size:10px;color:var(--muted);">/day</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="limit-cell">
+                            <input type="number" class="limit-input" value="${u.resume_limit_effective}" min="1" max="99">
+                            <span style="font-size:10px;color:var(--muted);">/day</span>
+                            <button class="btn-save" onclick="saveLimitFromRow(this, ${u.id})">Save</button>
+                        </div>
+                    </td>
+                    <td class="hide-mobile muted">${u.joined}</td>
+                </tr>`;
+                    }).join('') || '<tr><td colspan="9" class="empty">No users found.</td></tr>';
+                }
+            }
+            // Update AI table
+            const aiTbody = document.getElementById('ai-tbody');
+            if (aiTbody && data.recent_ai_logs) {
+                aiTbody.innerHTML = data.recent_ai_logs.map(log => `<tr>
+            <td class="email-link">${log.user__email || '—'}</td>
+            <td><span class="tag">${log.prompt_type || 'generate'}</span></td>
+            <td class="muted">${log.model_used || 'gemini'}</td>
+            <td class="muted">${log.created_at}</td>
+        </tr>`).join('') || '<tr><td colspan="4" class="empty">No AI activity recorded yet.</td></tr>';
+            }
+
+            document.getElementById('last-updated').textContent = `Updated: ${data.last_updated}`;
+        }
+
+        async function refresh() {
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'inline-block';
+            try {
+                const res = await fetch(API_URL);
+                if (res.ok) {
+                    const data = await res.json();
+                    updateStats(data);
+                }
+            } catch (e) {
+                console.warn('Monitor refresh failed:', e);
+            }
+            spinner.style.display = 'none';
+        }
+
+        // Auto-refresh every 10 seconds
+        refreshInterval = setInterval(refresh, 10000);
+
+        // Load data immediately on page open (don't wait 10s)
+        refresh();
+
+        // Save per-user limits from the static Django template rows
+        async function saveLimit(btn, userId) {
+            const row = btn.closest('tr');
+            const aiInput = row.querySelector('.ai-inp-' + userId);
+            const resInput = row.querySelector('.res-inp-' + userId);
+            if (!aiInput || !resInput) {
+                // Fallback for JS-rendered rows: grab first and second limit-input
+                const inputs = row.querySelectorAll('.limit-input');
+                if (inputs.length < 2) return;
+                await doSaveLimit(btn, userId, parseInt(inputs[0].value), parseInt(inputs[1].value));
+            } else {
+                await doSaveLimit(btn, userId, parseInt(aiInput.value), parseInt(resInput.value));
+            }
+        }
+
+        // Used for JS-rendered rows after auto-refresh
+        async function saveLimitFromRow(btn, userId) {
+            return saveLimit(btn, userId);
+        }
+
+        async function doSaveLimit(btn, userId, aiLimit, resumeLimit) {
+            btn.textContent = '...';
+            btn.disabled = true;
+            try {
+                const csrfToken = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+                const res = await fetch('/admin-monitor/set-limits/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                    body: JSON.stringify({ user_id: userId, ai_limit: aiLimit, resume_limit: resumeLimit })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    btn.textContent = '✓ Saved';
+                    btn.classList.add('saved');
+                    setTimeout(() => {
+                        btn.textContent = 'Save';
+                        btn.classList.remove('saved');
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (e) {
+                btn.textContent = '✗ Error';
+                btn.classList.add('error');
+                setTimeout(() => {
+                    btn.textContent = 'Save';
+                    btn.classList.remove('error');
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
+
+        // Also refresh when tab becomes visible again
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) refresh();
+        });
+    </script>
+
+</body>
+
+</html>

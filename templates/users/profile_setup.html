@@ -17,7 +17,49 @@
     <a href="{% url 'dashboard' %}" class="btn-secondary text-sm">Skip for Now</a>
 </div>
 
-<div class="min-h-screen pt-24 pb-12 px-4 md:px-6">
+<div class="min-h-screen pt-24 pb-12 px-4 md:px-6 relative">
+
+    {% if just_verified %}
+    <!-- Success Celebration Modal -->
+    <div id="verified-modal"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-dark-900/80 backdrop-blur-md transition-opacity duration-500">
+        <div class="bg-dark-800 rounded-3xl p-10 max-w-sm w-full border border-primary-500/30 shadow-[0_0_60px_-15px_rgba(99,102,241,0.5)] transform scale-100 transition-all duration-500"
+            id="verified-modal-content">
+            <div
+                class="mx-auto w-24 h-24 mb-6 rounded-full bg-gradient-to-tr from-primary-500 to-accent-500 flex items-center justify-center shadow-lg shadow-primary-500/40 relative">
+                <!-- Checkmark SVG -->
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+                <!-- Ping ring -->
+                <span class="absolute inset-0 rounded-full border-2 border-primary-400 animate-ping opacity-75"></span>
+            </div>
+
+            <h2 class="text-3xl font-bold text-white text-center mb-2">Verified!</h2>
+            <p class="text-dark-300 text-center mb-8">Your email has been confirmed. Welcome to ResumeForge AI.</p>
+
+            <button onclick="closeVerifiedModal()" class="w-full btn-primary py-3.5 text-base font-semibold rounded-xl">
+                Continue Setup
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function closeVerifiedModal() {
+            const modal = document.getElementById('verified-modal');
+            const content = document.getElementById('verified-modal-content');
+
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95', 'opacity-0');
+            modal.classList.add('opacity-0');
+
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 500);
+        }
+    </script>
+    {% endif %}
+
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-10 animate-slide-up">
             <h1

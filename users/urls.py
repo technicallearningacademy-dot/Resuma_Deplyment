@@ -8,4 +8,7 @@ urlpatterns = [
     path('profile/setup/', views.profile_setup, name='profile_setup'),
     path('settings/', views.settings_view, name='settings'),
     path('delete-account/', views.delete_account, name='delete_account'),
+    path('verify-email/', views.verify_email_otp, name='verify_email_otp'),
+    path('resend-otp/', views.resend_otp, name='resend_otp'),
+    path('account-suspended/', views.account_suspended, name='account_suspended'),
 ]
