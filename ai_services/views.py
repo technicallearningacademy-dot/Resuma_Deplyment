@@ -1,5 +1,23 @@
 """
 AI service views (AJAX endpoints).
+
+These views power the AI features in the resume builder. All endpoints are:
+  - Login-required (no anonymous AI access)
+  - POST-only (stateful AI operations)
+  - Rate-limited per user per day (enforced via rate_limiter.py)
+
+Rate-limiting Architecture:
+  Each user has an admin-configurable daily limit stored on CustomUser.api_daily_limit.
+  The check_rate_limit() helper counts today's AIPromptLog entries for the user and
+  compares against their effective limit (per-user override, or system default).
+  If the limit is exceeded, a 429 JSON response is returned BEFORE any AI call is made,
+  meaning the AI API is never hit and the user is not charged.
+
+  Default daily limits (overridable per user by admin):
+    - generate  →  5 / day   (most expensive — full resume generation)
+    - enhance   →  10 / day  (cheap — single text block enhancement)
+    - optimize  →  3 / day   (keyword analysis against job description)
+    - extract   →  2 / day   (CV data extraction from uploaded file)
 """
 import json
 import logging
@@ -7,7 +25,8 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .client import get_client
-from resumes.models import Resume, AIPromptLog
+from .rate_limiter import check_rate_limit, rate_limit_response  # Per-user daily rate limiter
+from resumes.models import Resume, AIPromptLog, ResumeChatMessage
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +34,24 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_POST
 def generate_resume_ai(request):
-    """Generate LaTeX resume from user profile data or custom prompt using AI."""
+    """
+    Generate a full LaTeX resume from the user's profile data using AI.
+
+    Supports three modes depending on what context is provided:
+      1. Chat edit  — resume_id + current_latex + custom_prompt  → conversational edit via chat history
+      2. Reformat   — current_latex only                         → reformat existing LaTeX into a new template
+      3. First gen  — profile_data (or raw custom_prompt)        → first-time generation from user profile
+
+    Rate limit: 'generate' action (5/day default, admin-adjustable per user).
+    Returns JSON: { latex: <string> } on success, or { error, rate_limited } on failure.
+    """
+    # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
+    # check_rate_limit() reads today's AIPromptLog count for this user and action.
+    # If the user has exhausted their quota, we return a 429 immediately — no AI call is made.
+    allowed, used, limit = check_rate_limit(request.user, 'generate')
+    if not allowed:
+        return rate_limit_response('generate', used, limit)
+    # ─────────────────────────────────────────────────────────────────────────
     try:
         body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         template_style = body.get('template_style', 'modern_ats_clean')
@@ -27,14 +63,40 @@ def generate_resume_ai(request):
 
         # Try profile data first; fall back to custom prompt as raw text
         profile_data = _get_profile_data(request.user)
+        resume = None
+        if resume_id:
+            try:
+                resume = Resume.objects.get(id=resume_id, user=request.user)
+            except Resume.DoesNotExist:
+                pass
 
-        if current_latex:
-            # Re-format existing LaTeX into new template
+        if resume and current_latex and custom_prompt:
+            # We are in an active edit session with a custom prompt
+            # Save the user's new prompt to history
+            ResumeChatMessage.objects.create(resume=resume, role='user', content=custom_prompt)
+            
+            # Fetch history
+            chat_history = resume.chat_messages.all()
+            
+            # Use the new chat interface
+            latex_content = client.chat_resume_edit(
+                user_prompt=custom_prompt,
+                profile_data=profile_data,
+                current_latex=current_latex,
+                template_style=template_style,
+                chat_history_qs=chat_history
+            )
+            
+            # Save the AI's response to history
+            if latex_content:
+                ResumeChatMessage.objects.create(resume=resume, role='model', content=latex_content)
+                
+        elif current_latex:
+            # Re-format existing LaTeX into new template (no custom prompt)
             combined_prompt = f"Please extract all resume data from this existing LaTeX resume and reformat it flawlessly into the requested template style. Do not lose any information.\n\nEXISTING RESUME LATEX:\n{current_latex}"
-            if custom_prompt:
-                combined_prompt += f"\n\nADDITIONAL INSTRUCTIONS:\n{custom_prompt}"
             latex_content = client.generate_from_text(combined_prompt, template_style)
         elif profile_data:
+            # First time generation from profile
             latex_content = client.generate_latex_resume(profile_data, template_style, custom_prompt)
         elif custom_prompt:
             # No profile but user provided raw text — use it directly
@@ -51,14 +113,10 @@ def generate_resume_ai(request):
         latex_content = _clean_latex(latex_content)
 
         # Save to resume if resume_id provided
-        if resume_id:
-            try:
-                resume = Resume.objects.get(id=resume_id, user=request.user)
-                resume.latex_content = latex_content
-                resume.template_name = template_style
-                resume.save()
-            except Resume.DoesNotExist:
-                pass
+        if resume:
+            resume.latex_content = latex_content
+            resume.template_name = template_style
+            resume.save()
 
         # Log the AI interaction
         AIPromptLog.objects.create(
@@ -67,7 +125,7 @@ def generate_resume_ai(request):
             prompt_type='generate',
             prompt=f'Template: {template_style}, Custom: {custom_prompt[:500]}',
             response=latex_content[:2000],
-            model_used='gemini-1.5-flash',
+            model_used='gemini-2.0-flash-lite',
         )
 
         return JsonResponse({'latex': latex_content})
@@ -80,7 +138,21 @@ def generate_resume_ai(request):
 @login_required
 @require_POST
 def enhance_text_ai(request):
-    """Enhance resume text using AI."""
+    """
+    Enhance a selected block of resume text using AI.
+
+    Accepts a text snippet (e.g., a bullet point or summary paragraph) and an optional
+    context string describing where the text lives (e.g., 'resume bullet point').
+    Returns an improved version of the text with better grammar, impact, and phrasing.
+
+    Rate limit: 'enhance' action (10/day default).
+    Returns JSON: { enhanced_text: <string> } on success.
+    """
+    # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
+    allowed, used, limit = check_rate_limit(request.user, 'enhance')
+    if not allowed:
+        return rate_limit_response('enhance', used, limit)
+    # ─────────────────────────────────────────────────────────────────────────
     try:
         body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         text = body.get('text', '')
@@ -104,7 +176,20 @@ def enhance_text_ai(request):
 @login_required
 @require_POST
 def optimize_keywords_ai(request):
-    """Optimize resume keywords for ATS."""
+    """
+    Analyze the resume for ATS keyword gaps against a provided job description.
+
+    Accepts the full resume LaTeX text and an optional job description string.
+    Returns AI-generated keyword suggestions and recommendations to improve ATS pass-through.
+
+    Rate limit: 'optimize' action (3/day default — heavier prompt).
+    Returns JSON: { suggestions: <string> } on success.
+    """
+    # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
+    allowed, used, limit = check_rate_limit(request.user, 'optimize')
+    if not allowed:
+        return rate_limit_response('optimize', used, limit)
+    # ─────────────────────────────────────────────────────────────────────────
     try:
         body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         resume_text = body.get('resume_text', '')
@@ -121,6 +206,29 @@ def optimize_keywords_ai(request):
 
         return JsonResponse({'suggestions': suggestions})
 
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def fetch_chat_history(request, resume_id):
+    """Fetch the AI chat history for a specific resume."""
+    try:
+        resume = Resume.objects.get(id=resume_id, user=request.user)
+        messages = resume.chat_messages.all()
+        
+        history = [
+            {
+                'role': msg.role,
+                'content': msg.content,
+                'created_at': msg.created_at.isoformat()
+            }
+            for msg in messages
+        ]
+        
+        return JsonResponse({'history': history})
+        
+    except Resume.DoesNotExist:
+        return JsonResponse({'error': 'Resume not found.'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
