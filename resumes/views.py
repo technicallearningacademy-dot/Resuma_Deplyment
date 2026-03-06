@@ -42,6 +42,7 @@ def create_resume(request):
             user=request.user,
             title=title,
             template_name=template,
+            is_public=True,  # Enable sharing by default so Copy Link / Gmail / WhatsApp work
         )
         
         # Record the creation so limits persist even if deleted
@@ -176,6 +177,7 @@ def duplicate_resume(request, resume_id):
         title=f'{original.title} (Copy)',
         template_name=original.template_name,
         latex_content=original.latex_content,
+        is_public=True,  # Enable sharing by default
     )
     
     # Record the creation so limits persist even if deleted

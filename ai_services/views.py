@@ -278,3 +278,145 @@ def _clean_latex(text):
     if text.endswith('```'):
         text = text[:-3].strip()
     return text
+
+
+@login_required
+@require_POST
+def chat_with_ai(request):
+    """
+    Conversational AI endpoint — returns plain-text advice about resume topics.
+    Does NOT generate or modify LaTeX. Used for the 'Ask AI' chat mode.
+
+    Rate limit: uses 'enhance' bucket (10/day default).
+    Returns JSON: { reply: <string>, role: 'model' }
+    """
+    # ── Enforce per-user daily rate limit ────────────────────────────────────
+    allowed, used, limit = check_rate_limit(request.user, 'enhance')
+    if not allowed:
+        return rate_limit_response('enhance', used, limit)
+    # ─────────────────────────────────────────────────────────────────────────
+    try:
+        body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+        message = body.get('message', '').strip()
+        resume_id = body.get('resume_id')
+
+        if not message:
+            return JsonResponse({'error': 'No message provided.'}, status=400)
+
+        # Load chat history for multi-turn context (last 10 messages)
+        chat_history = None
+        if resume_id:
+            try:
+                resume = Resume.objects.get(id=resume_id, user=request.user)
+                chat_history = resume.chat_messages.all().order_by('created_at')[:20]
+                # Save the user message
+                ResumeChatMessage.objects.create(resume=resume, role='user', content=message)
+            except Resume.DoesNotExist:
+                pass
+
+        client = get_client()
+        reply = client.chat_with_assistant(message, chat_history)
+
+        if not reply:
+            return JsonResponse({'error': 'AI returned empty response. Please try again.'}, status=500)
+
+        # Save AI reply to chat history
+        if resume_id:
+            try:
+                resume = Resume.objects.get(id=resume_id, user=request.user)
+                ResumeChatMessage.objects.create(resume=resume, role='model', content=reply)
+            except Resume.DoesNotExist:
+                pass
+
+        # Log the interaction
+        AIPromptLog.objects.create(
+            user=request.user,
+            prompt_type='enhance',
+            prompt=message[:500],
+            response=reply[:2000],
+            model_used='gemini-2.0-flash-lite',
+        )
+
+        return JsonResponse({'reply': reply, 'role': 'model'})
+
+    except Exception as e:
+        logger.error(f'Chat error: {e}')
+        return JsonResponse({'error': f'AI error: {str(e)}'}, status=500)
+
+
+@login_required
+@require_POST
+def extract_pdf_ai(request):
+    """
+    PDF upload and extraction endpoint.
+    Accepts a PDF file, extracts its text with PyMuPDF, and sends it to AI
+    for structured resume data extraction.
+
+    Rate limit: 'extract' action (2/day default).
+    Returns JSON: { extracted_data: <dict>, raw_text: <string> }
+    """
+    # ── Enforce per-user daily rate limit ────────────────────────────────────
+    allowed, used, limit = check_rate_limit(request.user, 'extract')
+    if not allowed:
+        return rate_limit_response('extract', used, limit)
+    # ─────────────────────────────────────────────────────────────────────────
+    try:
+        pdf_file = request.FILES.get('pdf_file')
+        if not pdf_file:
+            return JsonResponse({'error': 'No PDF file uploaded.'}, status=400)
+
+        # Validate file type
+        if not pdf_file.name.lower().endswith('.pdf'):
+            return JsonResponse({'error': 'Only PDF files are accepted.'}, status=400)
+
+        # Limit to 10MB
+        if pdf_file.size > 10 * 1024 * 1024:
+            return JsonResponse({'error': 'File too large. Max 10MB.'}, status=400)
+
+        # Extract text using PyMuPDF
+        import fitz  # PyMuPDF
+        pdf_bytes = pdf_file.read()
+        doc = fitz.open(stream=pdf_bytes, filetype='pdf')
+        raw_text = ''
+        for page in doc:
+            raw_text += page.get_text()
+        doc.close()
+
+        if not raw_text.strip():
+            return JsonResponse({'error': 'Could not extract text from this PDF. It may be scanned/image-only.'}, status=400)
+
+        # Truncate to 8000 chars to stay within token limits
+        raw_text_trimmed = raw_text[:8000]
+
+        # Send to AI for structured extraction
+        client = get_client()
+        extracted_json_str = client.extract_from_pdf(raw_text_trimmed)
+
+        # Parse JSON response
+        import re as _re
+        json_match = _re.search(r'\{[\s\S]*\}', extracted_json_str)
+        if json_match:
+            import json as _json
+            extracted_data = _json.loads(json_match.group())
+        else:
+            extracted_data = {}
+
+        # Log the extraction
+        AIPromptLog.objects.create(
+            user=request.user,
+            prompt_type='extract',
+            prompt=f'PDF: {pdf_file.name} ({len(raw_text)} chars extracted)',
+            response=extracted_json_str[:2000],
+            model_used='gemini-2.0-flash-lite',
+        )
+
+        return JsonResponse({
+            'extracted_data': extracted_data,
+            'raw_text': raw_text_trimmed,
+            'filename': pdf_file.name,
+        })
+
+    except Exception as e:
+        logger.error(f'PDF extraction error: {e}')
+        return JsonResponse({'error': f'Extraction failed: {str(e)}'}, status=500)
+

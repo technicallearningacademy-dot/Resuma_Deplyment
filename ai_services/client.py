@@ -18,15 +18,20 @@ class GeminiClient:
     """AI client with Gemini primary + Hugging Face fallback."""
 
     def __init__(self):
-        # Configure Gemini
+        from .prompts import get_chat_system_prompt
+        # Configure Gemini with a system-level guardrail to restrict to resume topics
         api_key = settings.GEMINI_API_KEY
         if api_key:
             genai.configure(api_key=api_key)
-        self.gemini_model = genai.GenerativeModel('models/gemini-2.0-flash-lite')
+        self.gemini_model = genai.GenerativeModel(
+            'models/gemini-2.0-flash-lite',
+            system_instruction=get_chat_system_prompt()  # Global restriction applied to ALL calls
+        )
 
         # Configure Hugging Face (works without token for free models)
         hf_token = getattr(settings, 'HF_API_TOKEN', None) or None
         self.hf_client = InferenceClient(token=hf_token)
+
 
     def generate(self, prompt, max_tokens=8192):
         """Try Gemini first, fall back to Hugging Face on failure."""
@@ -108,6 +113,64 @@ class GeminiClient:
         from .prompts import get_keyword_optimization_prompt
         prompt = get_keyword_optimization_prompt(resume_text, job_description)
         return self.generate(prompt)
+
+    def chat_with_assistant(self, user_message, chat_history_qs=None):
+        """
+        Handle a pure conversational chat (no LaTeX generation).
+        Returns a plain-text conversational response about resume topics.
+        The system guardrail restricts topics to resume/career only.
+
+        chat_history_qs: optional QuerySet of ResumeChatMessage for multi-turn context.
+        """
+        from .prompts import get_chat_system_prompt
+
+        # Build Gemini multi-turn history
+        gemini_history = []
+        hf_messages = [{"role": "system", "content": get_chat_system_prompt()}]
+
+        if chat_history_qs:
+            for msg in chat_history_qs:
+                role_g = "user" if msg.role == "user" else "model"
+                role_h = "user" if msg.role == "user" else "assistant"
+                gemini_history.append({"role": role_g, "parts": [msg.content]})
+                hf_messages.append({"role": role_h, "content": msg.content})
+
+        # Attempt 1: Gemini Chat
+        try:
+            chat = self.gemini_model.start_chat(history=gemini_history)
+            response = chat.send_message(
+                user_message,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=1024,
+                    temperature=0.8,
+                )
+            )
+            logger.info('Chat response via Gemini')
+            return response.text
+        except Exception as e:
+            logger.warning(f'Gemini chat failed ({e}), falling back to HF...')
+
+        # Attempt 2: Hugging Face
+        hf_messages.append({"role": "user", "content": user_message})
+        try:
+            return self._generate_hf_chat(hf_messages, HF_MODEL, max_tokens=1024)
+        except Exception as e:
+            logger.warning(f'HF chat failed ({e}), trying fallback...')
+
+        try:
+            return self._generate_hf_chat(hf_messages, HF_FALLBACK_MODEL, max_tokens=1024)
+        except Exception as e:
+            logger.error(f'All AI providers failed for chat: {e}')
+            raise Exception('AI service unavailable. Please try again in a moment.')
+
+    def extract_from_pdf(self, pdf_text):
+        """
+        Extract structured resume data from raw text extracted from a PDF.
+        Returns a JSON string with all resume fields.
+        """
+        from .prompts import get_pdf_extraction_prompt
+        prompt = get_pdf_extraction_prompt(pdf_text)
+        return self.generate(prompt, max_tokens=4096)
 
     def chat_resume_edit(self, user_prompt, profile_data, current_latex, template_style, chat_history_qs):
         """
