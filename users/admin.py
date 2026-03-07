@@ -48,6 +48,30 @@ def limit_api_3(modeladmin, request, queryset):
     messages.info(request, 'AI daily limit set to 3 for selected users.')
 
 
+@admin.action(description='📄 Set Resume limit to 1/day (default)')
+def limit_resume_1(modeladmin, request, queryset):
+    queryset.update(resume_daily_limit=1)
+    messages.info(request, 'Resume daily limit set to 1 for selected users.')
+
+
+@admin.action(description='📄 Set Resume limit to 3/day')
+def limit_resume_3(modeladmin, request, queryset):
+    queryset.update(resume_daily_limit=3)
+    messages.info(request, 'Resume daily limit set to 3 for selected users.')
+
+
+@admin.action(description='📄 Set Resume limit to 5/day')
+def limit_resume_5(modeladmin, request, queryset):
+    queryset.update(resume_daily_limit=5)
+    messages.info(request, 'Resume daily limit set to 5 for selected users.')
+
+
+@admin.action(description='🔄 Reset Resume limit to system default (2/day)')
+def reset_resume_limit(modeladmin, request, queryset):
+    queryset.update(resume_daily_limit=0)
+    messages.success(request, 'Resume daily limit reset to default (2/day).')
+
+
 @admin.action(description='⚡ Set AI limit to 10/day (power users)')
 def limit_api_10(modeladmin, request, queryset):
     queryset.update(api_daily_limit=10)
@@ -70,6 +94,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = (
         'email', 'full_name_display', 'status_badge', 'resume_count',
         'ai_calls_today', 'ai_calls_total', 'api_limit_display',
+        'resume_limit_display',
         'login_count', 'last_login', 'date_joined',
     )
     list_filter = (
@@ -78,7 +103,9 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ('email', 'first_name', 'last_name', 'last_login_ip')
     ordering = ('-date_joined',)
-    actions = [block_users, unblock_users, limit_api_1, limit_api_3, limit_api_10, reset_api_limit]
+    actions = [block_users, unblock_users,
+               limit_api_1, limit_api_3, limit_api_10, reset_api_limit,
+               limit_resume_1, limit_resume_3, limit_resume_5, reset_resume_limit]
     readonly_fields = ('date_joined', 'last_login', 'login_count', 'last_login_ip', 'resume_count_readonly', 'ai_usage_summary')
     list_per_page = 30
 
@@ -93,9 +120,12 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('is_active', 'is_blocked', 'is_staff', 'is_superuser', 'is_profile_complete'),
             'description': 'Use "is_blocked" to hard-ban a user from the platform. "is_active=False" also disables login.',
         }),
-        ('⚡ API Limits', {
-            'fields': ('api_daily_limit',),
-            'description': 'Set 0 to use the system default (5 generations/day). Set a custom number to override for this user.',
+        ('⚡ AI & Resume Limits', {
+            'fields': ('api_daily_limit', 'resume_daily_limit'),
+            'description': (
+                'AI Limit: 0 = system default (5/day). Set custom number to override.\n'
+                'Resume Limit: 0 = system default (2/day). Set custom number to override per user.'
+            ),
         }),
         ('📊 Activity Stats (Read-only)', {
             'fields': ('date_joined', 'last_login', 'login_count', 'last_login_ip', 'resume_count_readonly', 'ai_usage_summary'),
@@ -169,6 +199,15 @@ class CustomUserAdmin(UserAdmin):
     def resume_count_readonly(self, obj):
         return obj.resumes.filter(is_active=True).count()
     resume_count_readonly.short_description = 'Active Resumes'
+
+    def resume_limit_display(self, obj):
+        effective = obj.resume_daily_limit if obj.resume_daily_limit > 0 else 2
+        if obj.resume_daily_limit == 0:
+            return format_html('<span style="color:#9ca3af">Default (2)</span>')
+        if obj.resume_daily_limit == 1:
+            return format_html('<span style="color:#f59e0b;font-weight:600">📄 {}/day</span>', obj.resume_daily_limit)
+        return format_html('<span style="color:#10b981;font-weight:600">📄 {}/day</span>', obj.resume_daily_limit)
+    resume_limit_display.short_description = '📄 Resume Limit'
 
     def ai_usage_summary(self, obj):
         from resumes.models import AIPromptLog

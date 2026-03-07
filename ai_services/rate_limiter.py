@@ -14,10 +14,10 @@ from django.http import JsonResponse
 
 # System-wide default daily limits per action type
 DAILY_LIMITS = {
-    'generate': 5,    # Resume generation (most expensive)
+    'generate': 50,    # Resume generation (most expensive)
     'enhance': 10,    # Text enhancement (cheap)
     'optimize': 3,    # Keyword optimization
-    'extract': 2,     # CV data extraction
+    'extract': 20,    # CV data extraction
 }
 
 # Human-readable names for error messages
@@ -69,8 +69,8 @@ def rate_limit_response(action_type, used, limit):
     name = ACTION_NAMES.get(action_type, action_type)
     return JsonResponse({
         'error': (
-            f"Daily limit reached! You have used {used}/{limit} {name} today. "
-            f"Your limit resets at midnight."
+            f"You have reached your daily limit of {limit} {name}. "
+            f"Your quota will automatically reset at midnight. Please try again tomorrow or contact support to upgrade your limits."
         ),
         'rate_limited': True,
         'used': used,

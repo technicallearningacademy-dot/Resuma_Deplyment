@@ -70,8 +70,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return f'{self.first_name} {self.last_name}'.strip() or self.email
 
     def get_resume_daily_limit(self):
-        """Effective daily resume limit for this user."""
-        return self.resume_daily_limit if self.resume_daily_limit > 0 else 1
+        return self.resume_daily_limit if self.resume_daily_limit > 0 else 2
 
     def get_ai_daily_limit(self):
         """Effective daily AI prompt limit for this user."""

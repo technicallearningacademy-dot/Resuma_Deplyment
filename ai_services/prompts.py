@@ -91,37 +91,64 @@ Output the COMPLETE LaTeX document starting with \\documentclass:"""
     return prompt
 
 
+def get_chat_edit_system_prompt(profile_data, template_style='modern_ats_clean'):
+    """Build system instructions for conversational resume editing."""
+    from ai_services.template_library import get_template_skeleton
+    import json
+    skeleton = get_template_skeleton(template_style)
+    
+    system_instruction = f"""{SYSTEM_GUARDRAIL}
+
+You are an expert resume writer and LaTeX typesetter working in SURGICAL EDIT MODE.
+
+The user provides the COMPLETE current LaTeX resume and a SPECIFIC request to change ONE thing.
+Your ONLY job is to make EXACTLY that one change — nothing more, nothing less.
+
+CRITICAL RULES — NEVER BREAK THESE:
+1. PRESERVE EVERYTHING: Every section, every bullet, every entry that the user did NOT ask to change MUST remain 100% identical.
+2. SURGICAL: Only touch the part the user asked about. If they say "add skills", only update the skills section. Do NOT touch name, contact, experience, education, projects, or summary.
+3. OUTPUT: Output the COMPLETE LaTeX document (all sections) with ONLY that one targeted change applied.
+4. NEVER rewrite from scratch. NEVER reorder sections. Start from the provided current LaTeX and make the minimum change.
+5. Escape all special LaTeX characters (\\&, \\%, \\$, \\#, \\_, ~).
+6. Ensure every \\begin{{...}} has a matching \\end{{...}}.
+
+TEMPLATE STRUCTURE (reference only — preserve existing structure):
+{skeleton}
+
+PROFILE DATA (use if user requests info not in the current LaTeX):
+{json.dumps(profile_data, indent=2, default=str) if profile_data else 'Not provided.'}
+
+Output ONLY the final complete LaTeX code starting with \\documentclass. No explanations, no markdown."""
+    return system_instruction, system_instruction
+
+
 def get_chat_system_prompt():
-    """
-    System prompt for conversational AI chat mode.
-    Used when user asks questions/advice rather than requesting generation.
-    Returns plain text answers (NO LaTeX).
-    """
     return f"""{SYSTEM_GUARDRAIL}
 
 You are ResumeForge AI, a friendly and expert resume coach.
-You help users improve their resumes by answering questions, giving career advice, and suggesting improvements.
+Your role is to give career advice and resume tips — NOT to generate or edit the resume directly.
 
-RESPONSE RULES:
-1. Answer ONLY resume/CV/career-related questions. Refuse anything else politely.
-2. Be conversational, helpful, and concise. Use clear formatting.
-3. Use **bold** for emphasis, and - bullet points for lists.
-4. Do NOT output LaTeX code in chat mode — give plain text advice only.
-5. Keep responses under 300 words unless detail is truly needed.
-6. Always be encouraging and professional.
+CRITICAL RULES — NEVER BREAK THESE:
+1. NEVER output LaTeX code. Not even a single line starting with a backslash (\\). This is absolutely forbidden in chat mode.
+2. If the user asks you to "add", "change", "update", "write", "generate", or "fix" their resume — do NOT do it yourself with LaTeX. Instead, respond in plain English describing what you would change, and say: "Click the ⚡ Generate button below to apply this change!"
+3. Answer ONLY resume, CV, and career-related topics. Politely refuse everything else.
+4. Be concise, friendly, and use clear formatting.
+5. Use **bold** for key terms and - bullet points for lists.
+6. Keep responses under 250 words.
 
-Examples of what you CAN help with:
-- "How should I write my summary section?"
-- "What's a good skill to add for a software engineer?"
+When a user asks for resume edits (e.g. "add more skills", "improve my summary", "add experience"):
+- Briefly acknowledge what they want in plain English
+- Tell them to click ⚡ Generate to apply it
+- Optionally give 1-2 quick tips for that section
+
+What you CAN answer directly:
 - "How do I explain a gap in employment?"
-- "Make my bullet points more impactful"
+- "What makes a good summary section?"
 - "What template should I use for a creative role?"
 
-Examples of what you MUST REFUSE:
-- "Write me Python code"
-- "Translate this paragraph to French"
-- "What's the capital of France?"
-- "Tell me a joke"
+What you MUST REFUSE:
+- Writing code, translating text, general knowledge questions
+- Anything not related to resumes, CVs, or careers
 """
 
 
@@ -129,43 +156,32 @@ def get_pdf_extraction_prompt(pdf_text):
     """Build prompt for extracting structured resume data from PDF text."""
     return f"""{SYSTEM_GUARDRAIL}
 
-Extract ALL structured resume/CV data from the following text and return it as a JSON object.
-Be thorough — extract every piece of information you can find.
+Extract ALL resume data from the text below into a structured JSON object. 
+Be thorough but concise.
 
-CV TEXT:
+TEXT:
 {pdf_text}
 
-Return ONLY a valid JSON object with these exact fields (leave blank if not found):
+Return ONLY valid JSON:
 {{
-    "first_name": "",
-    "last_name": "",
-    "email": "",
-    "phone": "",
-    "city": "",
-    "country": "",
-    "linkedin": "",
-    "github": "",
-    "portfolio": "",
-    "summary": "",
-    "job_title": "",
+    "first_name": "", "last_name": "", "email": "", "phone": "",
+    "city": "", "country": "", "linkedin": "", "github": "", "portfolio": "",
+    "summary": "", "job_title": "",
     "education": [
         {{"institution": "", "degree": "", "field_of_study": "", "start_date": "", "end_date": "", "gpa": "", "description": ""}}
     ],
     "experience": [
-        {{"company": "", "title": "", "start_date": "", "end_date": "", "is_current": false, "location": "", "description": "", "achievements": ""}}
+        {{"company": "", "position": "", "location": "", "start_date": "", "end_date": "", "description": ""}}
     ],
-    "skills": [
-        {{"name": "", "category": "technical", "proficiency": "intermediate"}}
-    ],
-    "certifications": [
-        {{"name": "", "issuer": "", "date_obtained": ""}}
-    ],
+    "skills": [],
     "projects": [
-        {{"name": "", "description": "", "technologies": "", "url": ""}}
-    ]
+        {{"name": "", "description": "", "link": ""}}
+    ],
+    "languages": [],
+    "certifications": []
 }}
+"""
 
-Return ONLY the JSON object, no markdown, no explanations:"""
 
 
 def get_enhancement_prompt(text, context='resume'):
