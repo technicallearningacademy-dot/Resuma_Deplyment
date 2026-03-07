@@ -21,12 +21,14 @@
 
 ## ✨ Features
 
-### 🤖 AI-Powered Generation
+### 🤖 AI-Powered Generation & Conversational Editing
+- **Surgical AI Edits**: Highlight specific sections to incrementally edit your resume using intelligent conversational memory.
 - **Google Gemini 2.0 Flash-Lite** as primary model — fast and cost-effective
 - **Hugging Face Qwen2.5-Coder-32B** as automatic fallback
 - **Llama 3.2-3B** as final emergency fallback
 - Generates complete, valid LaTeX from your profile in seconds
 - Custom prompt support for role-specific optimization
+- Animated typing indicators for AI progress feedback
 
 ### 📄 10 Professional Templates
 | Template | Style |
@@ -41,13 +43,16 @@ All 10 templates are **pre-tested** and verified to compile against the `texlive
 
 ### 🖥 Live PDF Preview
 - Split-screen editor: write LaTeX on the left, see compiled PDF on the right
+- Full Preview mode to view the PDF in full-screen
 - **CodeMirror** syntax highlighting with LaTeX mode
 - Auto-recompilation on edit (2.5s debounce)
+- Auto-loads PDF on resume open
 - Compiles using local `pdflatex` → fallback to `texlive.net` API
 
-### 📥 Download Options
+### 📥 Download & Share Options
 - **PDF** — full compiled, professionally typeset resume
 - **DOCX** — Word-compatible version (via `python-docx`)
+- **Share** — Generates a unique public link to share via Gmail, WhatsApp, or direct copy
 - Auto-saves before download
 
 ### 📁 Version History
@@ -55,12 +60,13 @@ All 10 templates are **pre-tested** and verified to compile against the `texlive
 - Full restore capability from version history
 - Tracks change notes and timestamps
 
-### 👤 User Profile System
+### 👤 User Profile System & Rate Limits
 - Complete profile: name, contact, summary, job title
 - Education entries (institution, degree, GPA, dates)
 - Work experience (company, role, dates, achievements)
 - Skills (name, category, proficiency level)
 - Certifications, projects, links (LinkedIn, GitHub, Portfolio)
+- **Admin controlled per-user daily limits** for AI generation to prevent abuse
 
 ### 🔐 Authentication
 - Email/password registration and login
