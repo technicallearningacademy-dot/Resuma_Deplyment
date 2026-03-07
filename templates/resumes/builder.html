@@ -333,7 +333,6 @@
                             <p>👋 Hello! I'm your <strong class="text-white">AI Resume Assistant</strong>.</p>
                             <div class="mt-3 space-y-1.5">
                                 <div class="flex items-center gap-2 bg-dark-700/60 rounded-lg px-2.5 py-1.5">
-                                    <span class="text-primary-400 text-base">💬</span>
                                     <span><strong class="text-white">Ask AI</strong> — career advice &amp; tips</span>
                                 </div>
                                 <div class="flex items-center gap-2 bg-dark-700/60 rounded-lg px-2.5 py-1.5">
@@ -427,10 +426,6 @@
                                 <button onclick="chatWithAI()" id="ask-ai-btn"
                                     class="flex items-center gap-1 px-3 py-1 rounded-lg bg-dark-700 hover:bg-dark-600 border border-dark-500 text-dark-200 hover:text-white text-xs font-medium transition-all disabled:opacity-40"
                                     title="Get advice without changing the resume (Enter)">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
                                     Ask AI
                                 </button>
                                 <button onclick="generateWithAI()" id="send-ai-btn"
@@ -582,36 +577,7 @@
         });
     });
 
-    // Full Preview Toggle
-    function toggleFullPreview() {
-        isFullPreview = !isFullPreview;
-        const btn = document.getElementById('preview-toggle-btn');
 
-        if (isFullPreview) {
-            splitInstance.destroy();
-            document.getElementById('split-0').style.display = 'none';
-            document.getElementById('split-1').style.width = '100%';
-            btn.innerHTML = `
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-                Split View
-            `;
-            btn.classList.replace('btn-secondary', 'btn-primary');
-        } else {
-            document.getElementById('split-0').style.display = 'flex';
-            document.getElementById('split-1').style.width = '';
-            initSplit();
-            editor.refresh();
-            btn.innerHTML = `
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-                Full Preview
-            `;
-            btn.classList.replace('btn-primary', 'btn-secondary');
-        }
-    }
 
     // Auto-refresh preview on content change (debounced)
     let previewTimer;
@@ -913,9 +879,21 @@
         showToast('Chat cleared.', 'info');
     }
 
+    window._isAiBusy = false;
     function setInputBusy(busy) {
+        window._isAiBusy = busy;
         const els = ['custom-prompt', 'ask-ai-btn', 'send-ai-btn'];
-        els.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = busy; });
+        els.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.disabled = busy;
+                if (busy) {
+                    el.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    el.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        });
     }
 
     // PDF file selection — shows bar + pre-fills prompt. Does NOT auto-extract/generate.
@@ -952,7 +930,14 @@
     // Called from the Extract button in the PDF bar (extract only, no generation)
     async function extractPdfOnly() {
         if (!_selectedPdfFile) return;
-        await uploadPdfCv();
+        if (window._isAiBusy) return;
+
+        setInputBusy(true);
+        try {
+            await uploadPdfCv();
+        } finally {
+            setInputBusy(false);
+        }
     }
 
     /** Keyboard shortcuts */
@@ -973,6 +958,8 @@
     let lastUserMessage = ''; // Store the last message so the Generate button remembers context
 
     async function chatWithAI() {
+        if (window._isAiBusy) return;
+
         const inputEl = document.getElementById('custom-prompt');
         const message = inputEl.value.trim();
         if (!message) { showToast('Please type a question.', 'info'); return; }
@@ -1002,23 +989,19 @@
 
             if (data.reply) {
                 const reply = data.reply;
-
-                // Intercept if AI accidentally returned LaTeX code
-                const isLatex = reply.includes('\\documentclass') || reply.includes('\\usepackage') ||
-                    reply.includes('\\begin{document}') || reply.includes('\\section{');
+                const requiresEdit = data.requires_edit;
 
                 // Capture user message now so the Apply Change button always knows what to do
                 const escapedMsg = JSON.stringify(message);
                 const btnHtml = `<div class="mt-3"><button onclick="generateWithAI(${escapedMsg})" class="bg-gradient-to-r from-primary-600 to-primary-500 text-white font-semibold py-1.5 px-4 rounded-lg text-sm shadow flex items-center gap-1 hover:scale-105 transition-transform"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> ⚡ Apply Change</button></div>`;
 
-                if (isLatex) {
-                    // Don't show raw LaTeX — redirect user to Generate button
-                    const text = `It looks like you want to make changes to your resume.\n\nClick **Apply Change** below to update your resume!`;
-                    const wrap = appendChatMessage('model', text, true, 'chat');
-                    wrap.querySelector('.text-dark-200').insertAdjacentHTML('beforeend', btnHtml);
+                if (requiresEdit) {
+                    appendChatMessage('model', reply, true, 'chat');
+                    // Automatically trigger generation WITHOUT showing the Apply Change button
+                    await generateWithAI(message, true);
                 } else {
                     const wrap = appendChatMessage('model', reply, true, 'chat');
-                    // Always show Apply Change button for chat replies — let user apply their edit
+                    // Always show Apply Change button for chat replies just in case they want to force an edit
                     wrap.querySelector('.text-dark-200').insertAdjacentHTML('beforeend', btnHtml);
                 }
             } else if (data.rate_limited) {
@@ -1045,7 +1028,6 @@
         cancelPdfUpload(); // hide the bar
         appendChatMessage('user', `📄 Uploading & Extracting: ${file.name}`, true, 'chat');
         showTypingIndicator('Reading PDF... (May take 60s on fallback models)');
-        setInputBusy(true);
 
         console.log('uploadPdfCv started', file.name);
         const formData = new FormData();
@@ -1124,13 +1106,14 @@
             } else {
                 appendChatMessage('model', '⚠️ Upload failed or server error. Please try again.', true, 'error');
             }
-            return false;
-        } finally {
-            setInputBusy(false);
         }
-    }
+        return false;
+    } // Removed the finally block so we don't accidentally unlock if called inside another task
 
-    async function generateWithAI(forcedPrompt = null) {
+    async function generateWithAI(forcedPrompt = null, isHidden = false) {
+        if (!isHidden && window._isAiBusy) return;
+        if (!isHidden) setInputBusy(true);
+
         const inputEl = document.getElementById('custom-prompt');
         // Use forcedPrompt, or textbox, or the last "Ask AI" message if they are continuing a flow
         let customPrompt = forcedPrompt || inputEl.value.trim() || lastUserMessage;
@@ -1162,7 +1145,9 @@
         // Show UI feedback
         // When called via Apply Change button (forcedPrompt set), the user already saw their
         // message in the chat. Just show a small "applying" cue instead of duplicating.
-        if (forcedPrompt) {
+        if (isHidden) {
+            // Already completely shown in chat, no need to add another user bubble
+        } else if (forcedPrompt) {
             const preview = forcedPrompt.length > 80 ? forcedPrompt.slice(0, 80) + '...' : forcedPrompt;
             appendChatMessage('user', `⚡ Applying: "${preview}"`, true, 'chat');
         } else if (!editor.getValue().trim() && !customPrompt.includes('[USER PROVIDED PDF DATA')) {
@@ -1178,10 +1163,6 @@
         inputEl.value = '';
         lastUserMessage = ''; // Clear context after generation
         showTypingIndicator('⚡ Fast-Think Mode Generating...');
-
-        // Disable input
-        inputEl.disabled = true;
-        sendBtn.disabled = true;
 
         const isFastMode = document.getElementById('fast-think-toggle')?.checked || false;
 
@@ -1214,12 +1195,12 @@
                 refreshPreview();
                 showToast('Resume updated successfully!');
 
-                if (customPrompt) {
-                    // Build a human-friendly summary of what changed
-                    const summary = data.suggested_message ||
-                        `Your resume has been updated based on: "${customPrompt}"."`;
+                if (customPrompt && !isHidden) {
                     appendChatMessage('model', '', true, 'generate');
                 }
+
+                // If isHidden is true, we don't need to append anything else because the user 
+                // already got the natural conversational reply from the chat before this started!
 
                 // Do NOT aggressively switch to the editor tab. Keep the user in the AI chat!
             } else if (data.rate_limited) {
@@ -1246,9 +1227,10 @@
             showToast('Generation error.', 'error');
         } finally {
             removeTypingIndicator();
-            inputEl.disabled = false;
-            sendBtn.disabled = false;
-            inputEl.focus();
+            if (!isHidden) {
+                setInputBusy(false);
+                inputEl.focus();
+            }
         }
     }
 
@@ -1286,9 +1268,8 @@
     }
 
     async function downloadFormat(format) {
-        showLoading('Preparing download...');
+        showToast('Preparing download...', 'info');
         await saveResume(); // Ensure latest latex is in DB before generating template file
-        hideLoading();
         window.location.href = `/resume/${RESUME_ID}/download/${format}/`;
     }
 
@@ -1306,7 +1287,7 @@
             return;
         }
 
-        showLoading('Enhancing text...');
+        showToast('Enhancing text...', 'info');
         try {
             const response = await fetch('/ai/enhance/', {
                 method: 'POST',
@@ -1322,8 +1303,6 @@
             }
         } catch (err) {
             showToast('Error enhancing text', 'error');
-        } finally {
-            hideLoading();
         }
     }
 
@@ -1336,7 +1315,7 @@
             return;
         }
 
-        showLoading('Optimizing keywords...');
+        showToast('Optimizing keywords...', 'info');
         try {
             const response = await fetch('/ai/optimize/', {
                 method: 'POST',
@@ -1353,8 +1332,6 @@
             }
         } catch (err) {
             showToast('Error optimizing', 'error');
-        } finally {
-            hideLoading();
         }
     }
 
@@ -1385,12 +1362,20 @@
         isFullPreview = !isFullPreview;
 
         const btn = document.getElementById('preview-toggle-btn');
+        const split0 = document.getElementById('split-0');
+        const split1 = document.getElementById('split-1');
+
         if (isFullPreview) { // Hide sidebar, show preview only
             oldSizes = splitInstance.getSizes();
-            splitInstance.setSizes([0, 100]);
+            splitInstance.destroy(); // Destroy split instance to unlock widths
+            split0.style.display = 'none'; // Force hide the left panel to remove the gutter
+            split1.style.width = '100%';
             btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg> Exit Full Preview`;
             btn.classList.add('active');
         } else { // Restore split
+            split0.style.display = 'flex'; // Restore display before setting sizes
+            split1.style.width = ''; // Reset width so Split.js can take over
+            initSplit(); // Re-initialize the resizable panes
             splitInstance.setSizes(oldSizes);
             btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg> Full Preview`;
             btn.classList.remove('active');
@@ -1493,6 +1478,19 @@
             e.preventDefault();
             saveResume();
         }
+    });
+
+    // --- Hydrate Chat History on Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        {% for msg in resume.chat_messages.all %}
+        appendChatMessage("{{ msg.role|escapejs }}", "{{ msg.content|escapejs }}", false, 'chat');
+        {% endfor %}
+
+        // Scroll to bottom after hydrating
+        setTimeout(() => {
+            const container = document.getElementById('ai-chat-history');
+            if (container) container.scrollTop = container.scrollHeight;
+        }, 100);
     });
 </script>
 {% endblock %}

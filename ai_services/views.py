@@ -337,16 +337,19 @@ def chat_with_ai(request):
                 pass
 
         client = get_client()
-        reply = client.chat_with_assistant(message, chat_history)
+        reply_data = client.chat_with_assistant(message, chat_history)
 
-        if not reply:
+        if not reply_data or not reply_data.get('reply'):
             return JsonResponse({'error': 'AI returned empty response. Please try again.'}, status=500)
+
+        reply_text = reply_data['reply']
+        requires_edit = reply_data['requires_edit']
 
         # Save AI reply to chat history
         if resume_id:
             try:
                 resume = Resume.objects.get(id=resume_id, user=request.user)
-                ResumeChatMessage.objects.create(resume=resume, role='model', content=reply)
+                ResumeChatMessage.objects.create(resume=resume, role='model', content=reply_text)
             except Resume.DoesNotExist:
                 pass
 
@@ -355,11 +358,15 @@ def chat_with_ai(request):
             user=request.user,
             prompt_type='enhance',
             prompt=message[:500],
-            response=reply[:2000],
+            response=reply_text[:2000],
             model_used='gemini-2.0-flash-lite',
         )
 
-        return JsonResponse({'reply': reply, 'role': 'model'})
+        return JsonResponse({
+            'reply': reply_text, 
+            'requires_edit': requires_edit,
+            'role': 'model'
+        })
 
     except Exception as e:
         logger.error(f'Chat error: {e}')

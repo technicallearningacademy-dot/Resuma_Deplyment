@@ -120,12 +120,10 @@ class GeminiClient:
     def chat_with_assistant(self, user_message, chat_history_qs=None):
         """
         Handle a pure conversational chat (no LaTeX generation).
-        Returns a plain-text conversational response about resume topics.
-        The system guardrail restricts topics to resume/career only.
-
-        chat_history_qs: optional QuerySet of ResumeChatMessage for multi-turn context.
+        Returns a dict: {'reply': str, 'requires_edit': bool}
         """
         from .prompts import get_chat_system_prompt
+        import json
 
         # Build Gemini multi-turn history
         gemini_history = []
@@ -133,10 +131,46 @@ class GeminiClient:
 
         if chat_history_qs:
             for msg in chat_history_qs:
+                # We only want to feed the text 'reply' back into history, not the raw JSON
+                text_content = msg.content
                 role_g = "user" if msg.role == "user" else "model"
                 role_h = "user" if msg.role == "user" else "assistant"
-                gemini_history.append({"role": role_g, "parts": [msg.content]})
-                hf_messages.append({"role": role_h, "content": msg.content})
+                gemini_history.append({"role": role_g, "parts": [text_content]})
+                hf_messages.append({"role": role_h, "content": text_content})
+
+        def _parse_chat_response(text):
+            try:
+                # Find the first { and last } to strip conversational garbage
+                start_idx = text.find('{')
+                end_idx = text.rfind('}')
+                
+                if start_idx != -1 and end_idx != -1 and end_idx >= start_idx:
+                    json_text = text[start_idx:end_idx+1]
+                    parsed = json.loads(json_text)
+                    
+                    req_edit = parsed.get('requires_edit', False)
+                    if isinstance(req_edit, str):
+                        req_edit = req_edit.lower() == 'true'
+                        
+                    return {
+                        'reply': parsed.get('reply', text),
+                        'requires_edit': bool(req_edit)
+                    }
+                    
+                # Fallback if no JSON brackets found but we know they asked for an edit via heuristics
+                requires_edit = any(word in text.lower() for word in ['update', 'add', 'change', 'remove', 'sure', 'moment', 'generate'])
+                return {
+                    'reply': text,
+                    'requires_edit': requires_edit
+                }
+            except Exception as e:
+                logger.error(f'Failed to parse JSON chat response: {e}. Raw text: {text}')
+                # Heuristic fallback
+                requires_edit = any(word in text.lower() for word in ['update', 'add', 'change', 'remove', 'sure', 'moment', 'generate'])
+                return {
+                    'reply': text,
+                    'requires_edit': requires_edit
+                }
 
         # Attempt 1: Gemini Chat
         try:
@@ -149,19 +183,21 @@ class GeminiClient:
                 )
             )
             logger.info('Chat response via Gemini')
-            return response.text
+            return _parse_chat_response(response.text)
         except Exception as e:
             logger.warning(f'Gemini chat failed ({e}), falling back to HF...')
 
         # Attempt 2: Hugging Face
         hf_messages.append({"role": "user", "content": user_message})
         try:
-            return self._generate_hf_chat(hf_messages, HF_MODEL, max_tokens=1024)
+            hf_text = self._generate_hf_chat(hf_messages, HF_MODEL, max_tokens=1024)
+            return _parse_chat_response(hf_text)
         except Exception as e:
             logger.warning(f'HF chat failed ({e}), trying fallback...')
 
         try:
-            return self._generate_hf_chat(hf_messages, HF_FALLBACK_MODEL, max_tokens=1024)
+            hf_fallback_text = self._generate_hf_chat(hf_messages, HF_FALLBACK_MODEL, max_tokens=1024)
+            return _parse_chat_response(hf_fallback_text)
         except Exception as e:
             logger.error(f'All AI providers failed for chat: {e}')
             raise Exception('AI service unavailable. Please try again in a moment.')
@@ -224,13 +260,13 @@ class GeminiClient:
 
         # Attempt 1: Gemini (Using start_chat to maintain exact structure expectations)
         try:
-            chat = self.gemini_model.start_chat(history=gemini_history)
+            custom_model = genai.GenerativeModel(GEMINI_MODEL, system_instruction=system_instruction)
+            chat = custom_model.start_chat(history=gemini_history)
             response = chat.send_message(
                 context_msg,
                 generation_config=genai.types.GenerationConfig(
                     max_output_tokens=max_tokens_val,
                     temperature=temperature,
-                    system_instruction=system_instruction
                 )
             )
             logger.info('Generated edit via Gemini Chat')
