@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/LaTeX-Powered-red?style=for-the-badge&logo=latex" />
   <img src="https://img.shields.io/badge/License-MIT-purple?style=for-the-badge" />
 </p>
-> **A full-stack AI-powered resume builder** that generates professional, ATS-optimized LaTeX resumes from your profile — with live PDF preview, 10 beautiful templates, and multi-model AI with automatic fallback.
+> **A full-stack AI-powered resume builder** that generates professional, ATS-optimized LaTeX resumes from your profile — with live PDF preview, 14 beautiful templates, and multi-model AI with automatic fallback.
 
 ---
 
@@ -30,7 +30,7 @@
 - Custom prompt support for role-specific optimization
 - Animated typing indicators for AI progress feedback
 
-### 📄 10 Professional Templates
+### 📄 14 Professional Templates
 | Template | Style |
 |----------|-------|
 | **Modern ATS Clean** | Navy blue, Helvetica, FontAwesome icons |
@@ -38,8 +38,12 @@
 | **Corporate Executive** | Forest green, bold headers, executive layout |
 | **Creative Designer** | Teal color-block sections, vibrant sans-serif |
 | **Technical Developer** | Dark terminal theme, monospace, code aesthetic |
+| **Ocean Blue Modern** | ⚡ *New!* - Light blue accents, clean sans-serif |
+| **Pink Horizon Premium** | ⚡ *New!* - Bold pink branding, premium uppercase headers |
+| **Violet X Executive** | ⚡ *New!* - Deep violet leadership design, Palatino font |
+| **Gold Luxury** | ⚡ *New!* - Gold & midnight aesthetic, elegant serif |
 
-All 10 templates are **pre-tested** and verified to compile against the `texlive.net` LaTeX compiler.
+All 14 templates are **pre-tested** and verified to compile against the `texlive.net` LaTeX compiler.
 
 ### 🖥 Live PDF Preview
 - Split-screen editor: write LaTeX on the left, see compiled PDF on the right
@@ -66,7 +70,7 @@ All 10 templates are **pre-tested** and verified to compile against the `texlive
 - Work experience (company, role, dates, achievements)
 - Skills (name, category, proficiency level)
 - Certifications, projects, links (LinkedIn, GitHub, Portfolio)
-- **Admin controlled per-user daily limits** for AI generation to prevent abuse
+- **Global AI Rate Limits**: Admin-controlled total daily usage limits across all AI tools (Chat, Generate, Enhance) with a professional "Locked" state once limits are reached to ensure cost management.
 
 ### 🔐 Authentication
 - Email/password registration and login
