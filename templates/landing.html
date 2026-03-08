@@ -5,9 +5,9 @@ PDF & DOCX export. Land more interviews.{% endblock %}
 
 {% block content %}
 <!-- Navigation -->
-<nav class="fixed top-0 left-0 right-0 z-50 glass">
+<nav class="fixed top-0 left-0 right-0 z-50 glass" x-data="{ mobileMenuOpen: false }">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" class="flex items-center gap-2">
+        <a href="/" class="flex items-center gap-2 relative z-50">
             <div
                 class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,81 +17,284 @@ PDF & DOCX export. Land more interviews.{% endblock %}
             </div>
             <span class="text-xl font-bold text-white">Resume<span class="gradient-text">Forge</span> AI</span>
         </a>
-        <div class="flex items-center gap-4">
+
+        <!-- Desktop Nav -->
+        <div class="hidden md:flex items-center gap-4">
             <a href="{% url 'login' %}" class="btn-secondary text-sm">Sign In</a>
             <a href="{% url 'register' %}" class="btn-primary text-sm">Get Started Free</a>
         </div>
+
+        <!-- Mobile Menu Button -->
+        <button @click="mobileMenuOpen = !mobileMenuOpen"
+            class="md:hidden relative z-50 text-dark-200 hover:text-white focus:outline-none" title="Toggle Navigation"
+            aria-label="Toggle Navigation">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!mobileMenuOpen">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="mobileMenuOpen"
+                style="display: none;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-5" x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-5"
+        class="absolute top-full left-0 right-0 bg-dark-900/95 backdrop-blur-xl border-b border-dark-700/50 shadow-2xl py-6 px-6 flex flex-col gap-4 md:hidden"
+        style="display: none;">
+        <a href="{% url 'login' %}" class="btn-secondary w-full justify-center">Sign In</a>
+        <a href="{% url 'register' %}" class="btn-primary w-full justify-center">Get Started Free</a>
     </div>
 </nav>
 
+<style>
+    /* Landing Page Specific 3D & Particle Animations */
+    .particle-container {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .particle {
+        position: absolute;
+        background: var(--primary-400);
+        border-radius: 50%;
+        filter: blur(2px);
+        animation: drift 15s infinite linear;
+        opacity: 0.4;
+    }
+
+    @keyframes drift {
+        0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+
+        100% {
+            transform: translateY(-1000px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    .hero-3d-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow:
+            0 25px 50px -12px rgba(0, 0, 0, 0.5),
+            0 0 40px var(--mesh-glow-1),
+            inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        transform-style: preserve-3d;
+        perspective: 1000px;
+    }
+
+    .hero-3d-element {
+        transform: translateZ(40px);
+    }
+
+    .hero-3d-element-2 {
+        transform: translateZ(60px);
+    }
+</style>
+
 <!-- Hero Section -->
-<section class="relative min-h-screen flex items-center justify-center px-6 pt-20 overflow-hidden">
+<section class="relative min-h-screen flex items-center justify-center px-4 md:px-6 pt-24 pb-12 overflow-hidden">
     <!-- Animated background elements -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-float"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-float"
-            style="animation-delay: -3s"></div>
-        <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl animate-float"
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/20 rounded-full blur-[100px] animate-pulse-glow"
+            style="animation-duration: 6s;"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/20 rounded-full blur-[100px] animate-pulse-glow"
+            style="animation-delay: -3s; animation-duration: 8s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] animate-float"
             style="animation-delay: -1.5s"></div>
     </div>
 
-    <div class="relative max-w-5xl mx-auto text-center" data-aos="fade-up" data-aos-duration="1000">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-8 text-sm text-primary-300">
-            <span class="w-2 h-2 bg-accent-400 rounded-full animate-pulse"></span>
-            Powered By AI
+    <!-- Particles -->
+    <div class="particle-container">
+        <!-- Generate 15 particles via inline style for pseudo-random effect -->
+        <div class="particle w-2 h-2 left-[10%] bottom-[-10%]" style="animation-delay: 0s; animation-duration: 12s;">
+        </div>
+        <div class="particle w-3 h-3 left-[25%] bottom-[-10%] bg-accent-400"
+            style="animation-delay: 2s; animation-duration: 18s;"></div>
+        <div class="particle w-1 h-1 left-[40%] bottom-[-10%]" style="animation-delay: 4s; animation-duration: 15s;">
+        </div>
+        <div class="particle w-2 h-2 left-[60%] bottom-[-10%] bg-emerald-400"
+            style="animation-delay: 1s; animation-duration: 20s;"></div>
+        <div class="particle w-4 h-4 left-[75%] bottom-[-10%]" style="animation-delay: 5s; animation-duration: 16s;">
+        </div>
+        <div class="particle w-1 h-1 left-[90%] bottom-[-10%] bg-accent-400"
+            style="animation-delay: 3s; animation-duration: 14s;"></div>
+        <div class="particle w-2 h-2 left-[15%] bottom-[-10%]" style="animation-delay: 6s; animation-duration: 19s;">
+        </div>
+        <div class="particle w-3 h-3 left-[50%] bottom-[-10%] bg-emerald-400"
+            style="animation-delay: 0.5s; animation-duration: 17s;"></div>
+        <div class="particle w-1 h-1 left-[85%] bottom-[-10%]" style="animation-delay: 7s; animation-duration: 13s;">
+        </div>
+    </div>
+
+    <div class="relative max-w-7xl w-full mx-auto grid lg:grid-cols-2 gap-12 items-center" data-aos="fade-up"
+        data-aos-duration="1000">
+        <!-- Left text content -->
+        <div class="text-center lg:text-left z-10">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-6 md:mb-8 text-xs md:text-sm text-primary-300 shadow-[0_0_15px_var(--mesh-glow-1)] border border-primary-500/30">
+                <span
+                    class="w-2 h-2 bg-accent-400 rounded-full animate-pulse shadow-[0_0_8px_var(--accent-400)]"></span>
+                Powered By Next-Gen AI
+            </div>
+
+            <h1
+                class="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-[1.1] mb-4 md:mb-6 tracking-tight">
+                Build <span class="gradient-text drop-shadow-[0_0_20px_var(--mesh-glow-1)]">ATS-Optimized</span><br>
+                Resumes in Seconds
+            </h1>
+
+            <p
+                class="text-base sm:text-lg md:text-xl text-dark-300 max-w-xl mx-auto lg:mx-0 mb-8 md:mb-10 leading-relaxed font-light">
+                Our futuristic AI-powered builder crafts modern, ATS-beating resumes with pixel-perfect LaTeX templates.
+                Stand out visually and algorithmically.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
+                <a href="/register/"
+                    class="btn-primary w-full sm:w-auto text-base md:text-lg px-8 py-4 animate-pulse-glow shadow-[0_0_25px_var(--primary-600)] relative overflow-hidden group">
+                    <span
+                        class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></span>
+                    <span class="relative flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Start Building — Free
+                    </span>
+                </a>
+                <a href="#features"
+                    class="btn-secondary w-full sm:w-auto text-base md:text-lg px-8 py-4 glass hover:bg-white/10">
+                    Explore Features
+                </a>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0 border-t border-dark-700/50 pt-8"
+                data-aos="fade-up" data-aos-delay="400">
+                <div>
+                    <div class="text-3xl font-black text-white">10<span class="text-primary-400">+</span></div>
+                    <div class="text-sm text-dark-400 mt-1 font-medium tracking-wide uppercase">Pro Templates</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-accent-400">99<span class="text-white">%</span></div>
+                    <div class="text-sm text-dark-400 mt-1 font-medium tracking-wide uppercase">ATS Success</div>
+                </div>
+                <div>
+                    <div class="text-3xl font-black text-emerald-400">10x</div>
+                    <div class="text-sm text-dark-400 mt-1 font-medium tracking-wide uppercase">Faster Edits</div>
+                </div>
+            </div>
         </div>
 
-        <h1 class="text-5xl md:text-7xl font-black text-white leading-tight mb-6">
-            Build <span class="gradient-text">ATS-Optimized</span><br> Resumes in Seconds
-        </h1>
+        <!-- Right 3D Visual Mockup -->
+        <div class="hidden lg:block relative z-10 w-full h-[500px] perspective-1000" data-aos="zoom-in"
+            data-aos-delay="200">
+            <div class="w-full h-full relative tilt-card" data-tilt-max="10" data-tilt-speed="400"
+                data-tilt-glare="true" data-tilt-max-glare="0.2">
+                <div
+                    class="hero-3d-card absolute inset-0 w-full h-full flex flex-col pointer-events-none backdrop-blur-2xl">
+                    <!-- Fake Mac Window Controls -->
+                    <div class="flex gap-2 mb-6 hero-3d-element">
+                        <div class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_10px_var(--rose-500)]"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_var(--amber-500)]"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_var(--emerald-500)]"></div>
+                    </div>
 
-        <p class="text-lg md:text-xl text-dark-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            AI-powered resume builder with professional LaTeX templates. Beat applicant tracking systems and land more
-            interviews.
-        </p>
+                    <!-- Fake UI Layout -->
+                    <div class="flex-1 flex gap-4 h-full">
+                        <!-- Sidebar -->
+                        <div class="w-1/3 rounded-xl bg-dark-800/50 border border-dark-600/30 p-4 hero-3d-element-2">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 mb-6">
+                            </div>
+                            <div class="space-y-3">
+                                <div class="h-2 w-3/4 rounded-full bg-dark-600"></div>
+                                <div class="h-2 w-1/2 rounded-full bg-dark-600"></div>
+                                <div class="h-2 w-5/6 rounded-full bg-dark-600"></div>
+                            </div>
+                            <div class="mt-8 space-y-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-6 h-6 rounded-md bg-primary-500/20 flex items-center justify-center">
+                                        <div class="w-3 h-3 rounded bg-primary-400"></div>
+                                    </div>
+                                    <div class="h-2 w-20 rounded-full bg-dark-500"></div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-6 h-6 rounded-md bg-accent-500/20 flex items-center justify-center">
+                                        <div class="w-3 h-3 rounded bg-accent-400"></div>
+                                    </div>
+                                    <div class="h-2 w-16 rounded-full bg-dark-500"></div>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <a href="/register/" class="btn-primary text-lg px-8 py-3 animate-pulse-glow">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Start Building — It's Free
-            </a>
-            <a href="#features" class="btn-secondary text-lg px-8 py-3">
-                See How It Works
-            </a>
-        </div>
+                        <!-- Main Editor Area -->
+                        <div
+                            class="flex-1 rounded-xl bg-gradient-to-br from-white to-dark-100 flex flex-col p-6 shadow-2xl hero-3d-element relative overflow-hidden">
+                            <!-- Code scanning beam -->
+                            <div
+                                class="absolute inset-0 bg-gradient-to-b from-transparent via-primary-500/20 to-transparent w-full h-[20%] animate-[slide-up_2s_ease-in-out_infinite_alternate]">
+                            </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-3 gap-8 max-w-lg mx-auto" data-aos="fade-up" data-aos-delay="400">
-            <div>
-                <div class="text-3xl font-bold gradient-text">10</div>
-                <div class="text-sm text-dark-400 mt-1">Pro Templates</div>
-            </div>
-            <div>
-                <div class="text-3xl font-bold gradient-text">AI</div>
-                <div class="text-sm text-dark-400 mt-1">Powered</div>
-            </div>
-            <div>
-                <div class="text-3xl font-bold gradient-text">ATS</div>
-                <div class="text-sm text-dark-400 mt-1">Optimized</div>
+                            <div class="h-6 w-1/3 rounded bg-dark-800 mb-4 shadow-sm"></div>
+                            <div class="space-y-4 border-l-2 border-primary-400 pl-4">
+                                <div>
+                                    <div class="h-3 w-1/4 rounded bg-dark-800 mb-2"></div>
+                                    <div class="h-2 w-full rounded bg-dark-400 mb-1"></div>
+                                    <div class="h-2 w-5/6 rounded bg-dark-400"></div>
+                                </div>
+                                <div>
+                                    <div class="h-3 w-1/3 rounded bg-dark-800 mb-2"></div>
+                                    <div class="h-2 w-full rounded bg-dark-400 mb-1"></div>
+                                    <div class="h-2 w-4/5 rounded bg-dark-400"></div>
+                                </div>
+                            </div>
+
+                            <!-- Floating AI Badge -->
+                            <div
+                                class="absolute bottom-6 right-6 px-3 py-1.5 rounded-lg bg-dark-900 border border-primary-500 shadow-[0_0_15px_var(--primary-500)] flex items-center gap-2 animate-bounce">
+                                <svg class="w-4 h-4 text-primary-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span class="text-xs font-bold text-white">AI Optimized</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section id="features" class="py-24 px-6 relative z-10">
+<section id="features" class="py-16 md:py-24 px-4 md:px-6 relative z-10">
     <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-16" data-aos="fade-up">
+        <div class="text-center mb-12 md:mb-16" data-aos="fade-up">
             <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Everything You Need to <span
                     class="gradient-text">Land the Job</span></h2>
-            <p class="text-dark-400 text-lg max-w-2xl mx-auto">Powerful features that make resume building effortless
+            <p class="text-dark-400 text-base md:text-lg max-w-2xl mx-auto">Powerful features that make resume building
+                effortless
                 and effective.</p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Feature 1 -->
             <div class="card group tilt-card" data-aos="fade-up" data-aos-delay="100">
                 <div
@@ -180,15 +383,16 @@ PDF & DOCX export. Land more interviews.{% endblock %}
 </section>
 
 <!-- How It Works -->
-<section class="py-24 px-6 relative z-10">
+<section class="py-16 md:py-24 px-4 md:px-6 relative z-10">
     <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-16" data-aos="fade-up">
+        <div class="text-center mb-12 md:mb-16" data-aos="fade-up">
             <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">How It <span class="gradient-text">Works</span>
             </h2>
         </div>
 
-        <div class="space-y-8">
-            <div class="flex items-start gap-6 card tilt-card" data-aos="fade-right" data-aos-delay="100">
+        <div class="space-y-6 md:space-y-8">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 md:gap-6 card tilt-card"
+                data-aos="fade-right" data-aos-delay="100">
                 <div
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 text-white font-bold">
                     1</div>
@@ -198,7 +402,8 @@ PDF & DOCX export. Land more interviews.{% endblock %}
                         an existing CV.</p>
                 </div>
             </div>
-            <div class="flex items-start gap-6 card tilt-card" data-aos="fade-left" data-aos-delay="200">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 md:gap-6 card tilt-card"
+                data-aos="fade-left" data-aos-delay="200">
                 <div
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center flex-shrink-0 text-white font-bold">
                     2</div>
@@ -208,7 +413,8 @@ PDF & DOCX export. Land more interviews.{% endblock %}
                         from your data.</p>
                 </div>
             </div>
-            <div class="flex items-start gap-6 card tilt-card" data-aos="fade-right" data-aos-delay="300">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 md:gap-6 card tilt-card"
+                data-aos="fade-right" data-aos-delay="300">
                 <div
                     class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center flex-shrink-0 text-white font-bold">
                     3</div>
@@ -223,13 +429,14 @@ PDF & DOCX export. Land more interviews.{% endblock %}
 </section>
 
 <!-- CTA Section -->
-<section class="py-24 px-6 relative z-10">
+<section class="py-16 md:py-24 px-4 md:px-6 relative z-10">
     <div class="max-w-3xl mx-auto text-center" data-aos="zoom-in" data-aos-duration="1000">
-        <div class="card p-12 tilt-card"
+        <div class="card p-8 md:p-12 tilt-card"
             style="background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(16,185,129,0.1));">
-            <h2 class="text-3xl font-bold text-white mb-4">Ready to Build Your Perfect Resume?</h2>
-            <p class="text-dark-400 mb-8">Join thousands who land more interviews with AI-optimized resumes.</p>
-            <a href="/register/" class="btn-primary text-lg px-8 py-3 animate-pulse-glow">
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">Ready to Build Your Perfect Resume?</h2>
+            <p class="text-sm md:text-base text-dark-400 mb-8">Join thousands who land more interviews with AI-optimized
+                resumes.</p>
+            <a href="/register/" class="btn-primary w-full sm:w-auto text-base md:text-lg px-8 py-3 animate-pulse-glow">
                 Get Started Free →
             </a>
         </div>
@@ -237,12 +444,12 @@ PDF & DOCX export. Land more interviews.{% endblock %}
 </section>
 
 <!-- Footer -->
-<footer class="border-t border-dark-700/50 pt-12 pb-8 px-6">
+<footer class="border-t border-dark-700/50 pt-12 pb-8 px-4 md:px-6 text-center md:text-left">
     <div class="max-w-6xl mx-auto">
-        <div class="grid md:grid-cols-2 gap-10 mb-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
             <!-- Brand & Description -->
-            <div>
-                <div class="flex items-center gap-2 mb-3">
+            <div class="flex flex-col items-center md:items-start">
+                <div class="flex items-center justify-center md:justify-start gap-2 mb-3">
                     <div
                         class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,10 +459,11 @@ PDF & DOCX export. Land more interviews.{% endblock %}
                     </div>
                     <span class="text-lg font-bold text-white">Resume<span class="gradient-text">Forge</span> AI</span>
                 </div>
-                <p class="text-dark-400 text-sm leading-relaxed max-w-md">At JabiruLabs, we craft smart digital
+                <p class="text-dark-400 text-sm leading-relaxed max-w-md mx-auto md:mx-0">At JabiruLabs, we craft smart
+                    digital
                     solutions — from websites and apps to AI chatbots, custom AI models, and more. We bring ideas to
                     life with creativity and innovation.</p>
-                <div class="flex items-center gap-3 mt-4">
+                <div class="flex items-center justify-center md:justify-start gap-3 mt-6">
                     <a href="https://www.instagram.com/jabirulabs" target="_blank"
                         class="w-8 h-8 rounded-lg bg-dark-800/60 border border-dark-700/50 flex items-center justify-center text-dark-400 hover:text-pink-400 hover:border-pink-500/30 transition-all"><svg
                             class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -284,10 +492,10 @@ PDF & DOCX export. Land more interviews.{% endblock %}
             </div>
 
             <!-- Contact Info -->
-            <div class="md:text-right">
+            <div class="md:text-right mt-8 md:mt-0 flex flex-col items-center md:items-end">
                 <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Get In Touch</h4>
                 <ul class="space-y-2.5 text-sm text-dark-400">
-                    <li class="flex items-center gap-2 md:justify-end">
+                    <li class="flex items-center justify-center gap-2 md:justify-end">
                         <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -296,7 +504,7 @@ PDF & DOCX export. Land more interviews.{% endblock %}
                         <a href="mailto:info@jabirulabs.com"
                             class="hover:text-primary-300 transition-colors">info@jabirulabs.com</a>
                     </li>
-                    <li class="flex items-center gap-2 md:justify-end">
+                    <li class="flex items-center justify-center gap-2 md:justify-end">
                         <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -305,7 +513,7 @@ PDF & DOCX export. Land more interviews.{% endblock %}
                         <a href="tel:+923342515060" class="hover:text-primary-300 transition-colors">+92 334 251
                             5060</a>
                     </li>
-                    <li class="flex items-center gap-2 md:justify-end">
+                    <li class="flex items-center justify-center gap-2 md:justify-end">
                         <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -315,7 +523,7 @@ PDF & DOCX export. Land more interviews.{% endblock %}
                         </svg>
                         <span>Bannu, KPK, Pakistan</span>
                     </li>
-                    <li class="flex items-center gap-2 md:justify-end">
+                    <li class="flex items-center justify-center gap-2 md:justify-end">
                         <svg class="w-4 h-4 text-primary-400 flex-shrink-0" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

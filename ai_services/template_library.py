@@ -569,7 +569,127 @@ TEMPLATES = {
 {{PROJECTS}}
 
 \end{document}
-"""
+""",
+
+    'ocean_blue_modern': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{tgheros}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{ocean}{HTML}{0ea5e9}
+\definecolor{dark}{HTML}{1e293b}
+
+\hypersetup{colorlinks=true, urlcolor=ocean}
+\titleformat{\section}{\large\bfseries\color{ocean}}{}{0em}{}[\vspace{-4pt}\rule{\linewidth}{0.8pt}]
+\titlespacing{\section}{0pt}{12pt}{6pt}
+
+\begin{document}
+\begin{center}
+    {\Huge\bfseries\color{dark} {{NAME}}} \\[4pt]
+    {\large\color{ocean} {{JOB_TITLE}}} \\[6pt]
+    \faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad \faPhone\ {{PHONE}} \quad \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn}
+\end{center}
+\section{Summary} {{SUMMARY}}
+\section{Experience} {{EXPERIENCE}}
+\section{Education} {{EDUCATION}}
+\section{Skills} {{SKILLS}}
+\section{Projects} {{PROJECTS}}
+\end{document}
+""",
+
+    'pink_horizon_premium': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{pinkh}{HTML}{db2777}
+\definecolor{charcoal}{HTML}{374151}
+
+\hypersetup{colorlinks=true, urlcolor=pinkh}
+\titleformat{\section}{\large\bfseries\color{pinkh}\uppercase}{}{0em}{}[\vspace{-2pt}\rule{\linewidth}{1.2pt}]
+\titlespacing{\section}{0pt}{14pt}{8pt}
+
+\begin{document}
+{\Huge\bfseries\color{pinkh} {{NAME}}} \hfill {\large\color{charcoal} {{JOB_TITLE}}} \\[6pt]
+\faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad \faPhone\ {{PHONE}} \quad \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn}
+\rule{\linewidth}{0.4pt}
+\section{Profile} {{SUMMARY}}
+\section{Professional Experience} {{EXPERIENCE}}
+\section{Education} {{EDUCATION}}
+\section{Tools \& Expertise} {{SKILLS}}
+\end{document}
+""",
+
+    'violet_x_executive': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.2cm, right=1.2cm, top=1.2cm, bottom=1.2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{palatino}
+
+\definecolor{violetx}{HTML}{7c3aed}
+\definecolor{deep}{HTML}{1e1b4b}
+
+\hypersetup{colorlinks=true, urlcolor=violetx}
+\titleformat{\section}{\Large\bfseries\color{deep}}{}{0em}{}[\vspace{-2pt}\textcolor{violetx}{\rule{\linewidth}{2pt}}]
+\titlespacing{\section}{0pt}{12pt}{6pt}
+
+\begin{document}
+{\Huge\bfseries\color{deep} {{NAME}}} \\[2pt]
+{\large\color{violetx} {{JOB_TITLE}}} \\[8pt]
+\faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad \faPhone\ {{PHONE}} \quad \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn} \quad \faGithub\ \href{{{GITHUB}}}{GitHub}
+\vspace{10pt}
+\section{Executive Summary} {{SUMMARY}}
+\section{Leadership \& Experience} {{EXPERIENCE}}
+\section{Education} {{EDUCATION}}
+\section{Technical Skills} {{SKILLS}}
+\end{document}
+""",
+
+    'gold_luxury': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fontawesome5}
+\usepackage{times}
+
+\definecolor{gold}{HTML}{b45309}
+\definecolor{night}{HTML}{0f172a}
+
+\hypersetup{colorlinks=true, urlcolor=gold}
+\titleformat{\section}{\large\bfseries\color{gold}\centering}{}{0em}{}[\vspace{-2pt}\rule{0.2\linewidth}{0.5pt}]
+\titlespacing{\section}{0pt}{12pt}{6pt}
+
+\begin{document}
+\begin{center}
+    {\Huge\bfseries\color{night} {{NAME}}} \\[4pt]
+    {\large\itshape\color{gold} {{JOB_TITLE}}} \\[6pt]
+    \small \faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \ | \ \faPhone\ {{PHONE}} \ | \ \faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn}
+\end{center}
+\section{Overview} {{SUMMARY}}
+\section{Career History} {{EXPERIENCE}}
+\section{Academic Foundation} {{EDUCATION}}
+\section{Core Skills} {{SKILLS}}
+\end{document}
+""",
 }
 
 def get_template_skeleton(template_style):

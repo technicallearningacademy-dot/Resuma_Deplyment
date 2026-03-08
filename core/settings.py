@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'resumes.apps.ResumesConfig',
     'ai_services.apps.AiServicesConfig',
     'templates_engine.apps.TemplatesEngineConfig',
+    'site_config.apps.SiteConfigConfig',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'site_config.context_processors.theme_processor',
             ],
         },
     },

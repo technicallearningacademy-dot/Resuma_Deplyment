@@ -54,7 +54,7 @@
 
             <form method="post" class="space-y-4">
                 {% csrf_token %}
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium text-dark-300 mb-1.5">First Name</label>
                         {{ form.first_name }}

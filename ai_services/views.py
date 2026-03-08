@@ -28,7 +28,17 @@ from .client import get_client
 from .rate_limiter import check_rate_limit, rate_limit_response  # Per-user daily rate limiter
 from resumes.models import Resume, AIPromptLog, ResumeChatMessage
 
+from resumes.models import Resume, AIPromptLog, ResumeChatMessage
+
 logger = logging.getLogger(__name__)
+
+
+def _safe_int(val, default=None):
+    """Safely convert a value to int, returning default on failure."""
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
 
 
 @login_required
@@ -45,15 +55,17 @@ def generate_resume_ai(request):
     Rate limit: 'generate' action (5/day default, admin-adjustable per user).
     Returns JSON: { latex: <string> } on success, or { error, rate_limited } on failure.
     """
-    # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
-    # check_rate_limit() reads today's AIPromptLog count for this user and action.
-    # If the user has exhausted their quota, we return a 429 immediately — no AI call is made.
-    allowed, used, limit = check_rate_limit(request.user, 'generate')
-    if not allowed:
-        return rate_limit_response('generate', used, limit)
-    # ─────────────────────────────────────────────────────────────────────────
     try:
         data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+        
+        # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
+        # check_rate_limit() reads today's AIPromptLog count for this user and action.
+        allowed, used, limit = check_rate_limit(request.user, 'generate')
+        if not allowed:
+            logger.warning(f"Rate limit hit for user {request.user} on 'generate'")
+            return rate_limit_response('generate', used, limit)
+        # ─────────────────────────────────────────────────────────────────────────
+
         template_style = data.get('template_style', 'modern_ats_clean')
         custom_prompt = data.get('custom_prompt', '').strip()
         current_latex = data.get('current_latex', '').strip()
@@ -66,9 +78,10 @@ def generate_resume_ai(request):
         # Try profile data first; fall back to custom prompt as raw text
         profile_data = _get_profile_data(request.user)
         resume = None
-        if resume_id:
+        rid = _safe_int(resume_id)
+        if rid:
             try:
-                resume = Resume.objects.get(id=resume_id, user=request.user)
+                resume = Resume.objects.get(id=rid, user=request.user)
             except Resume.DoesNotExist:
                 pass
 
@@ -170,12 +183,14 @@ def enhance_text_ai(request):
     Rate limit: 'enhance' action (10/day default).
     Returns JSON: { enhanced_text: <string> } on success.
     """
-    # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
-    allowed, used, limit = check_rate_limit(request.user, 'enhance')
-    if not allowed:
-        return rate_limit_response('enhance', used, limit)
-    # ─────────────────────────────────────────────────────────────────────────
     try:
+        # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
+        allowed, used, limit = check_rate_limit(request.user, 'enhance')
+        if not allowed:
+            logger.warning(f"Rate limit hit for user {request.user} on 'enhance'")
+            return rate_limit_response('enhance', used, limit)
+        # ─────────────────────────────────────────────────────────────────────────
+
         body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         text = body.get('text', '')
         context = body.get('context', 'resume')
@@ -188,6 +203,15 @@ def enhance_text_ai(request):
 
         if not enhanced:
             return JsonResponse({'error': 'Enhancement failed.'}, status=500)
+
+        # Log the interaction
+        AIPromptLog.objects.create(
+            user=request.user,
+            prompt_type='enhance',
+            prompt=text[:500],
+            response=enhanced[:2000],
+            model_used='gemini-2.0-flash-lite',
+        )
 
         return JsonResponse({'enhanced_text': enhanced})
 
@@ -207,12 +231,14 @@ def optimize_keywords_ai(request):
     Rate limit: 'optimize' action (3/day default — heavier prompt).
     Returns JSON: { suggestions: <string> } on success.
     """
-    # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
-    allowed, used, limit = check_rate_limit(request.user, 'optimize')
-    if not allowed:
-        return rate_limit_response('optimize', used, limit)
-    # ─────────────────────────────────────────────────────────────────────────
     try:
+        # ── Enforce per-user daily rate limit BEFORE hitting the AI API ───────────
+        allowed, used, limit = check_rate_limit(request.user, 'optimize')
+        if not allowed:
+            logger.warning(f"Rate limit hit for user {request.user} on 'optimize'")
+            return rate_limit_response('optimize', used, limit)
+        # ─────────────────────────────────────────────────────────────────────────
+
         body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         resume_text = body.get('resume_text', '')
         job_description = body.get('job_description', '')
@@ -225,6 +251,15 @@ def optimize_keywords_ai(request):
 
         if not suggestions:
             return JsonResponse({'error': 'Optimization failed.'}, status=500)
+
+        # Log the interaction
+        AIPromptLog.objects.create(
+            user=request.user,
+            prompt_type='optimize',
+            prompt=f"Resume: {len(resume_text)} chars, Job Desc: {len(job_description)} chars",
+            response=suggestions[:2000],
+            model_used='gemini-2.0-flash-lite',
+        )
 
         return JsonResponse({'suggestions': suggestions})
 
@@ -312,12 +347,14 @@ def chat_with_ai(request):
     Rate limit: uses 'enhance' bucket (10/day default).
     Returns JSON: { reply: <string>, role: 'model' }
     """
-    # ── Enforce per-user daily rate limit ────────────────────────────────────
-    allowed, used, limit = check_rate_limit(request.user, 'enhance')
-    if not allowed:
-        return rate_limit_response('enhance', used, limit)
-    # ─────────────────────────────────────────────────────────────────────────
     try:
+        # ── Enforce per-user daily rate limit ────────────────────────────────────
+        allowed, used, limit = check_rate_limit(request.user, 'enhance')
+        if not allowed:
+            logger.warning(f"Rate limit hit for user {request.user} on 'chat'")
+            return rate_limit_response('enhance', used, limit)
+        # ─────────────────────────────────────────────────────────────────────────
+
         body = json.loads(request.body) if request.content_type == 'application/json' else request.POST
         message = body.get('message', '').strip()
         resume_id = body.get('resume_id')
@@ -327,9 +364,10 @@ def chat_with_ai(request):
 
         # Load chat history for multi-turn context (last 10 messages)
         chat_history = None
-        if resume_id:
+        rid = _safe_int(resume_id)
+        if rid:
             try:
-                resume = Resume.objects.get(id=resume_id, user=request.user)
+                resume = Resume.objects.get(id=rid, user=request.user)
                 chat_history = resume.chat_messages.all().order_by('created_at')[:20]
                 # Save the user message
                 ResumeChatMessage.objects.create(resume=resume, role='user', content=message)
@@ -346,9 +384,9 @@ def chat_with_ai(request):
         requires_edit = reply_data['requires_edit']
 
         # Save AI reply to chat history
-        if resume_id:
+        if rid:
             try:
-                resume = Resume.objects.get(id=resume_id, user=request.user)
+                resume = Resume.objects.get(id=rid, user=request.user)
                 ResumeChatMessage.objects.create(resume=resume, role='model', content=reply_text)
             except Resume.DoesNotExist:
                 pass
@@ -384,12 +422,14 @@ def extract_pdf_ai(request):
     Rate limit: 'extract' action (2/day default).
     Returns JSON: { extracted_data: <dict>, raw_text: <string> }
     """
-    # ── Enforce per-user daily rate limit ────────────────────────────────────
-    allowed, used, limit = check_rate_limit(request.user, 'extract')
-    if not allowed:
-        return rate_limit_response('extract', used, limit)
-    # ─────────────────────────────────────────────────────────────────────────
     try:
+        # ── Enforce per-user daily rate limit ────────────────────────────────────
+        allowed, used, limit = check_rate_limit(request.user, 'extract')
+        if not allowed:
+            logger.warning(f"Rate limit hit for user {request.user} on 'extract'")
+            return rate_limit_response('extract', used, limit)
+        # ─────────────────────────────────────────────────────────────────────────
+
         print("[DEBUG] extract_pdf_ai started", flush=True)
         pdf_file = request.FILES.get('pdf_file')
         if not pdf_file:

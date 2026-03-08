@@ -19,6 +19,11 @@ class Resume(models.Model):
         ('marketing_pro', 'Marketing Pro'),
         ('legal_standard', 'Legal Standard'),
         ('medical_clinical', 'Medical Clinical'),
+        # Color Themes
+        ('ocean_blue_modern', 'Ocean Blue Modern'),
+        ('pink_horizon_premium', 'Pink Horizon Premium'),
+        ('violet_x_executive', 'Violet X Executive'),
+        ('gold_luxury', 'Gold Luxury'),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='resumes')

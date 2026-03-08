@@ -182,7 +182,41 @@ def profile_setup(request):
 @login_required
 def settings_view(request):
     """User settings page."""
-    return render(request, 'users/settings.html')
+    try:
+        profile = request.user.profile
+    except Exception:
+        profile = None
+
+    if request.method == 'POST' and 'update_theme' in request.POST:
+        if profile:
+            new_theme = request.POST.get('app_theme')
+            if new_theme in dict(UserProfile.THEME_CHOICES):
+                # Check SiteConfiguration to make sure it's enabled
+                from site_config.models import SiteConfiguration
+                config = SiteConfiguration.load()
+                
+                if new_theme == UserProfile.THEME_PINK_3D and not config.enable_pink_theme:
+                    messages.error(request, 'Pink Horizon theme is currently disabled by administrators.')
+                elif new_theme == UserProfile.THEME_VIOLET_3D and not config.enable_violet_theme:
+                    messages.error(request, 'Deep Violet X theme is currently disabled by administrators.')
+                else:
+                    profile.app_theme = new_theme
+                    profile.save()
+                    messages.success(request, 'Theme updated successfully!')
+        else:
+            messages.error(request, 'Please complete your profile setup first.')
+            
+        return redirect('settings')
+
+    # Load config to pass to template so we can hide disabled themes
+    from site_config.models import SiteConfiguration
+    config = SiteConfiguration.load()
+
+    context = {
+        'profile': profile,
+        'config': config
+    }
+    return render(request, 'users/settings.html', context)
 
 
 @login_required

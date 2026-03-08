@@ -96,6 +96,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class UserProfile(models.Model):
     """Extended profile data for structured CV information."""
+    THEME_SYSTEM = 'system'
+    THEME_OCEAN = 'theme-ocean'
+    THEME_PINK_3D = 'theme-pink-3d'
+    THEME_VIOLET_3D = 'theme-violet-3d'
+    
+    THEME_CHOICES = [
+        (THEME_SYSTEM, 'System Default'),
+        (THEME_OCEAN, 'Ocean Mesh (Default)'),
+        (THEME_PINK_3D, 'Pink Horizon'),
+        (THEME_VIOLET_3D, 'Deep Violet X'),
+    ]
+
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
     phone = models.CharField(max_length=20, blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -105,6 +117,14 @@ class UserProfile(models.Model):
     portfolio = models.URLField(blank=True)
     summary = models.TextField(blank=True, help_text='Professional summary / objective')
     job_title = models.CharField(max_length=200, blank=True, help_text='Desired job title')
+    
+    app_theme = models.CharField(
+        max_length=50,
+        choices=THEME_CHOICES,
+        default=THEME_SYSTEM,
+        help_text='Global application UI theme'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

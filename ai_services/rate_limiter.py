@@ -14,10 +14,10 @@ from django.http import JsonResponse
 
 # System-wide default daily limits per action type
 DAILY_LIMITS = {
-    'generate': 50,    # Resume generation (most expensive)
+    'generate': 5,     # Resume generation (most expensive)
     'enhance': 10,    # Text enhancement (cheap)
     'optimize': 3,    # Keyword optimization
-    'extract': 20,    # CV data extraction
+    'extract': 2,     # CV data extraction
 }
 
 # Human-readable names for error messages
@@ -32,34 +32,45 @@ ACTION_NAMES = {
 def _get_limit_for_user(user, action_type):
     """
     Get the effective daily limit for a user and action.
-    Respects the admin-set api_daily_limit override for 'generate' actions.
+    Respects the admin-set api_daily_limit override for ALL actions.
     """
     default = DAILY_LIMITS.get(action_type, 5)
-    if action_type == 'generate':
-        # Admin can set a custom per-user limit (0 = use default)
-        custom = getattr(user, 'api_daily_limit', 0)
-        return custom if custom > 0 else default
-    return default
+    # Admin can set a custom per-user limit (0 = use default)
+    custom = getattr(user, 'api_daily_limit', 0)
+    return custom if custom > 0 else default
 
 
-def get_usage_today(user, action_type):
-    """Count how many times the user has used this action today."""
+def get_usage_today(user, action_type=None):
+    """
+    Count how many times the user has used AI today.
+    If action_type is provided, count only that specific action.
+    Otherwise, count ALL AI actions for today.
+    """
     from resumes.models import AIPromptLog
     today = timezone.now().date()
-    return AIPromptLog.objects.filter(
-        user=user,
-        prompt_type=action_type,
-        created_at__date=today,
-    ).count()
+    query = AIPromptLog.objects.filter(user=user, created_at__date=today)
+    if action_type:
+        query = query.filter(prompt_type=action_type)
+    return query.count()
 
 
 def check_rate_limit(user, action_type):
     """
-    Check if the user has exceeded their daily limit for the given action.
-    Returns (allowed: bool, used: int, limit: int).
+    Check if the user has exceeded their daily limit.
+    If a custom api_daily_limit is set, it treats it as a GLOBAL limit for all actions.
+    Otherwise, it uses the per-action system defaults.
     """
-    limit = _get_limit_for_user(user, action_type)
-    used = get_usage_today(user, action_type)
+    has_custom_limit = getattr(user, 'api_daily_limit', 0) > 0
+    
+    if has_custom_limit:
+        # Global enforcement: Count all actions against the one custom limit
+        limit = user.api_daily_limit
+        used = get_usage_today(user, action_type=None)
+    else:
+        # System defaults: Per-action bucketing
+        limit = DAILY_LIMITS.get(action_type, 5)
+        used = get_usage_today(user, action_type=action_type)
+        
     allowed = used < limit
     return allowed, used, limit
 
