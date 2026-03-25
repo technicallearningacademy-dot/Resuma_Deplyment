@@ -9,9 +9,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-me')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
-CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app', 'https://bd26-116-71-122-78.ngrok-free.app']
+# Allow all IPs so the server can be accessed from other devices on the LAN
+ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app']
+
+# Base URL for sharing links (Gmail, WhatsApp, Copy Link)
+SITE_URL = config('SITE_URL', default='')
+if SITE_URL:
+    # Ensure it's trusted for CSRF if it's an external URL
+    if SITE_URL.startswith('http'):
+        CSRF_TRUSTED_ORIGINS.append(SITE_URL)
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # =============================================================================
 # Application definition
 # =============================================================================

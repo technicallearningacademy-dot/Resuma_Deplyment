@@ -15,4 +15,7 @@ urlpatterns = [
     path('resume/share/<uuid:token>/', views.public_resume_view, name='public_resume'),
     path('resume/share/<uuid:token>/preview/', views.public_preview_resume_pdf, name='public_preview_resume_pdf'),
     path('resume/share/<uuid:token>/download/', views.public_download_resume, name='public_download_resume'),
+    # Admin-only version preview/download
+    path('resume-admin/version/<int:version_id>/pdf/', views.admin_version_pdf, name='admin_version_pdf'),
+    path('resume-admin/resume/<int:resume_id>/pdf/', views.admin_current_pdf, name='admin_current_pdf'),
 ]

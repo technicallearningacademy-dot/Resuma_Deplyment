@@ -315,3 +315,54 @@ def public_download_resume(request, token):
         return response
     else:
         return HttpResponse("Failed to generate PDF for download.", status=500)
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
+def admin_version_pdf(request, version_id):
+    """
+    Generate and return a PDF for a specific ResumeVersion ID.
+    Only accessible to staff members from the Django Admin.
+    """
+    from .models import ResumeVersion
+    from templates_engine.compiler import compile_latex_to_pdf
+    
+    version = get_object_or_404(ResumeVersion, id=version_id)
+    download = request.GET.get('download', '0') == '1'
+    
+    try:
+        pdf_content = compile_latex_to_pdf(version.latex_content)
+        if pdf_content:
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            if download:
+                filename = f"{version.resume.title}_v{version.version_number}.pdf"
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        else:
+            return HttpResponse("Failed to compile LaTeX for this version.", status=400)
+    except Exception as e:
+        return HttpResponse(f"PDF Generation Error: {e}", status=500)
+
+
+@staff_member_required
+def admin_current_pdf(request, resume_id):
+    """
+    Generate and return a PDF for the CURRENT state of a Resume.
+    Only accessible to staff members from the Django Admin.
+    """
+    from .models import Resume
+    from templates_engine.compiler import compile_latex_to_pdf
+    
+    resume = get_object_or_404(Resume, id=resume_id)
+    
+    try:
+        pdf_content = compile_latex_to_pdf(resume.latex_content)
+        if pdf_content:
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            # Always preview in browser for this one
+            return response
+        else:
+            return HttpResponse("Failed to compile LaTeX for this resume.", status=400)
+    except Exception as e:
+        return HttpResponse(f"PDF Generation Error: {e}", status=500)

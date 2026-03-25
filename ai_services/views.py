@@ -100,14 +100,17 @@ def generate_resume_ai(request):
             chat_history = resume.chat_messages.all()
             
             # Use the new chat interface
-            latex_content = client.chat_resume_edit(
-                user_prompt=short_prompt,
+            res = client.chat_resume_edit(
+                user_prompt=custom_prompt,
                 profile_data=profile_data,
                 current_latex=current_latex,
                 template_style=template_style,
                 chat_history_qs=chat_history,
                 fast_mode=fast_mode
             )
+            latex_content = res['content']
+            provider = res['provider']
+            tokens = res['tokens']
             
             # Save a SHORT summary as the model's response — NEVER save raw LaTeX to chat history
             # Raw LaTeX in chat history overwhelms the AI context on the next turn
@@ -120,13 +123,22 @@ def generate_resume_ai(request):
         elif current_latex:
             # Re-format existing LaTeX into new template (no custom prompt)
             combined_prompt = f"Please extract all resume data from this existing LaTeX resume and reformat it flawlessly into the requested template style. Do not lose any information.\n\nEXISTING RESUME LATEX:\n{current_latex}"
-            latex_content = client.generate_from_text(combined_prompt, template_style, fast_mode=fast_mode)
+            res = client.generate_from_text(combined_prompt, template_style, fast_mode=fast_mode)
+            latex_content = res['content']
+            provider = res['provider']
+            tokens = res['tokens']
         elif profile_data:
             # First time generation from profile
-            latex_content = client.generate_latex_resume(profile_data, template_style, custom_prompt, fast_mode=fast_mode)
+            res = client.generate_latex_resume(profile_data, template_style, custom_prompt, fast_mode=fast_mode)
+            latex_content = res['content']
+            provider = res['provider']
+            tokens = res['tokens']
         elif custom_prompt:
             # No profile but user provided raw text — use it directly
-            latex_content = client.generate_from_text(custom_prompt, template_style, fast_mode=fast_mode)
+            res = client.generate_from_text(custom_prompt, template_style, fast_mode=fast_mode)
+            latex_content = res['content']
+            provider = res['provider']
+            tokens = res['tokens']
         else:
             return JsonResponse({
                 'error': 'Please complete your profile OR paste your resume data in the Custom AI Prompt field.'
@@ -160,14 +172,15 @@ def generate_resume_ai(request):
             prompt_type='generate',
             prompt=f'Template: {template_style}, Custom: {custom_prompt[:500]}',
             response=latex_content[:2000],
-            model_used='gemini-2.0-flash-lite',
+            model_used=provider,
+            tokens_used=tokens
         )
 
         return JsonResponse({'latex': latex_content})
 
     except Exception as e:
         logger.error(f'AI generation error: {e}')
-        return JsonResponse({'error': f'AI error: {str(e)}'}, status=500)
+        return JsonResponse({'error': f'AI error: {str(e)}'}, status=400)
 
 
 @login_required
@@ -199,7 +212,10 @@ def enhance_text_ai(request):
             return JsonResponse({'error': 'No text provided.'}, status=400)
 
         client = get_client()
-        enhanced = client.enhance_text(text, context)
+        res = client.enhance_text(text, context)
+        enhanced = res['content']
+        provider = res['provider']
+        tokens = res['tokens']
 
         if not enhanced:
             return JsonResponse({'error': 'Enhancement failed.'}, status=500)
@@ -210,7 +226,8 @@ def enhance_text_ai(request):
             prompt_type='enhance',
             prompt=text[:500],
             response=enhanced[:2000],
-            model_used='gemini-2.0-flash-lite',
+            model_used=provider,
+            tokens_used=tokens
         )
 
         return JsonResponse({'enhanced_text': enhanced})
@@ -247,7 +264,10 @@ def optimize_keywords_ai(request):
             return JsonResponse({'error': 'No resume text provided.'}, status=400)
 
         client = get_client()
-        suggestions = client.optimize_keywords(resume_text, job_description)
+        res = client.optimize_keywords(resume_text, job_description)
+        suggestions = res['content']
+        provider = res['provider']
+        tokens = res['tokens']
 
         if not suggestions:
             return JsonResponse({'error': 'Optimization failed.'}, status=500)
@@ -258,7 +278,8 @@ def optimize_keywords_ai(request):
             prompt_type='optimize',
             prompt=f"Resume: {len(resume_text)} chars, Job Desc: {len(job_description)} chars",
             response=suggestions[:2000],
-            model_used='gemini-2.0-flash-lite',
+            model_used=provider,
+            tokens_used=tokens
         )
 
         return JsonResponse({'suggestions': suggestions})
@@ -382,6 +403,8 @@ def chat_with_ai(request):
 
         reply_text = reply_data['reply']
         requires_edit = reply_data['requires_edit']
+        provider = reply_data.get('provider', 'Unknown')
+        tokens = reply_data.get('tokens', 0)
 
         # Save AI reply to chat history
         if rid:
@@ -394,10 +417,11 @@ def chat_with_ai(request):
         # Log the interaction
         AIPromptLog.objects.create(
             user=request.user,
-            prompt_type='enhance',
+            prompt_type='chat',
             prompt=message[:500],
             response=reply_text[:2000],
-            model_used='gemini-2.0-flash-lite',
+            model_used=provider,
+            tokens_used=tokens
         )
 
         return JsonResponse({
@@ -408,7 +432,7 @@ def chat_with_ai(request):
 
     except Exception as e:
         logger.error(f'Chat error: {e}')
-        return JsonResponse({'error': f'AI error: {str(e)}'}, status=500)
+        return JsonResponse({'error': f'AI error: {str(e)}'}, status=400)
 
 
 @login_required
@@ -468,10 +492,14 @@ def extract_pdf_ai(request):
         print("[DEBUG] Getting AI client...", flush=True)
         client = get_client()
         print("[DEBUG] Calling client.extract_from_pdf...", flush=True)
-        extracted_json_str = client.extract_from_pdf(raw_text_trimmed)
-        print(f"[DEBUG] AI extraction complete, received {len(extracted_json_str)} chars", flush=True)
+        res = client.extract_from_pdf(raw_text_trimmed)
+        extracted_json_str = res['content']
+        provider = res['provider']
+        tokens = res['tokens']
+        print(f"[DEBUG] AI extraction complete via {provider}, tokens: {tokens}", flush=True)
 
         # Parse JSON response using safe string methods (avoid regex catastrophic backtracking)
+        # ... (lines 475-485 remain the same) ...
         start_idx = extracted_json_str.find('{')
         end_idx = extracted_json_str.rfind('}')
         if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
@@ -490,7 +518,8 @@ def extract_pdf_ai(request):
             prompt_type='extract',
             prompt=f'PDF: {pdf_file.name} ({len(raw_text)} chars extracted)',
             response=extracted_json_str[:2000],
-            model_used='gemini-1.5-flash',
+            model_used=provider,
+            tokens_used=tokens
         )
 
         print("[DEBUG] Returning success response", flush=True)
@@ -501,9 +530,6 @@ def extract_pdf_ai(request):
         })
 
     except Exception as e:
-        print(f"[DEBUG] EXCEPTION CAUGHT: {e}", flush=True)
-        import traceback
-        traceback.print_exc()
         logger.error(f'PDF extraction error: {e}')
-        return JsonResponse({'error': f'Extraction failed: {str(e)}'}, status=500)
+        return JsonResponse({'error': f'Extraction failed: {str(e)}'}, status=400)
 

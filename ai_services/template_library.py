@@ -66,6 +66,178 @@ TEMPLATES = {
 
 \end{document}
 """,
+    'technical_developer': r"""
+\documentclass[10pt,a4paper]{article}
+\usepackage[left=1.1cm, right=1.1cm, top=1.1cm, bottom=1.1cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[scaled]{helvet}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{marvosym}
+\newcommand{\faEnvelope}{\Letter}
+\newcommand{\faPhone}{\Telefon}
+\newcommand{\faGithub}{GitHub}
+\newcommand{\faLinkedin}{LinkedIn}
+\newcommand{\faMapMarker}{$\bullet$}
+\newcommand{\faLink}{\textrightarrow}
+\newcommand{\faGooglePlay}{$\triangleright$}
+\newcommand{\faChevronRight}{\textbullet}
+\usepackage{pagecolor}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usepackage{mdframed}
+\usepackage{graphicx}
+
+% ---- COLOR PALETTE ----
+\definecolor{bg}{HTML}{FFFFFF}
+\definecolor{surface}{HTML}{F3F6FA}
+\definecolor{accent}{HTML}{1A56DB}
+\definecolor{accentgold}{HTML}{B45309}
+\definecolor{textprimary}{HTML}{111827}
+\definecolor{textsecondary}{HTML}{6B7280}
+\definecolor{headercol}{HTML}{111827}
+\definecolor{divider}{HTML}{D1D5DB}
+\definecolor{tagbg}{HTML}{EFF6FF}
+\definecolor{tagtxt}{HTML}{1D4ED8}
+\definecolor{greenbadge}{HTML}{D1FAE5}
+\definecolor{greentxt}{HTML}{065F46}
+
+\pagecolor{bg}
+\color{textprimary}
+
+\hypersetup{colorlinks=true, urlcolor=accent}
+
+% ---- FONTS ----
+\renewcommand{\familydefault}{\sfdefault}
+
+% ---- SECTION STYLE ----
+\titleformat{\section}
+  {\normalfont\normalsize\bfseries\color{accentgold}\sffamily}
+  {}{0em}
+  {\MakeUppercase}
+  [\vspace{1pt}\color{divider}\rule{\linewidth}{0.5pt}]
+
+\titlespacing{\section}{0pt}{10pt}{5pt}
+
+% ---- HELPERS ----
+\newcommand{\skilltag}[1]{%
+  \tikz[baseline=(t.base)]{
+    \node[fill=tagbg, draw=accent!30, rounded corners=3pt,
+          inner xsep=5pt, inner ysep=2.5pt, text=tagtxt, font=\footnotesize\sffamily] (t) {#1};
+  }%
+}
+
+\newcommand{\jobtitle}[2]{%
+  \textbf{\color{headercol}#1} \hfill \textcolor{textsecondary}{\small #2}\\
+}
+
+\newcommand{\jobsubtitle}[1]{%
+  \textit{\color{accent}\small #1}\\[-2pt]
+}
+
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=14pt, label={\textcolor{accent}{\tiny\faChevronRight}}}
+
+\begin{document}
+
+% ================================================================
+% HEADER
+% ================================================================
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[surface] (current page.north west) rectangle ([yshift=-2.8cm]current page.north east);
+\end{tikzpicture}
+
+\vspace{0pt}
+\IfFileExists{profile.jpg}{
+\begin{minipage}[c]{0.78\textwidth}
+  {\color{headercol}\fontsize{26}{30}\selectfont\bfseries\sffamily {{NAME}}}\\[3pt]
+  {\color{accent}\large\sffamily {{JOB_TITLE}}} \quad
+  {\color{textsecondary}\small\sffamily $\bullet$ \ {{CITY}}, {{COUNTRY}}}\\[6pt]
+
+  \textcolor{textsecondary}{\small
+    \faEnvelope\ \href{mailto:{{EMAIL}}}{\color{accent}{{EMAIL}}} \quad
+    \faPhone\ \color{textprimary}{{PHONE}} \quad
+    \faGithub\ \href{{{GITHUB}}}{\color{accent}GitHub} \quad
+    \faLinkedin\ \href{{{LINKEDIN}}}{\color{accent}LinkedIn}
+  }
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.2\textwidth}
+\begin{tikzpicture}
+\clip (0,0) circle (1.2cm);
+\node at (0,0) {\includegraphics[width=2.4cm]{profile.jpg}};
+\end{tikzpicture}
+\end{minipage}
+}{
+  {\color{headercol}\fontsize{26}{30}\selectfont\bfseries\sffamily {{NAME}}}\\[3pt]
+  {\color{accent}\large\sffamily {{JOB_TITLE}}} \quad
+  {\color{textsecondary}\small\sffamily $\bullet$ \ {{CITY}}, {{COUNTRY}}}\\[6pt]
+
+  \textcolor{textsecondary}{\small
+    \faEnvelope\ \href{mailto:{{EMAIL}}}{\color{accent}{{EMAIL}}} \quad
+    \faPhone\ \color{textprimary}{{PHONE}} \quad
+    \faGithub\ \href{{{GITHUB}}}{\color{accent}GitHub} \quad
+    \faLinkedin\ \href{{{LINKEDIN}}}{\color{accent}LinkedIn}
+  }
+}
+
+\vspace{6pt}
+\textcolor{accent}{\rule{\linewidth}{1pt}}
+\vspace{2pt}
+
+% ================================================================
+% SUMMARY
+% ================================================================
+\section{Professional Summary}
+\textcolor{textsecondary}{
+{{SUMMARY}}
+}
+
+% ================================================================
+% SKILLS  (Multi-column tag layout)
+% ================================================================
+\section{Technical Skills}
+\begin{mdframed}[
+  backgroundcolor=surface,
+  linecolor=divider,
+  linewidth=0.5pt,
+  innerleftmargin=10pt,
+  innerrightmargin=10pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+  roundcorner=4pt
+]
+{{SKILLS}}
+\end{mdframed}
+
+% ================================================================
+% EXPERIENCE
+% ================================================================
+\section{Professional Experience}
+{{EXPERIENCE}}
+
+% ================================================================
+% PROJECTS
+% ================================================================
+\section{Key Projects}
+{{PROJECTS}}
+
+% ================================================================
+% EDUCATION
+% ================================================================
+\section{Education}
+{{EDUCATION}}
+
+\end{document}
+""",
+
+
 
     'minimal_academic': r"""
 \documentclass[11pt,a4paper]{article}
@@ -228,66 +400,7 @@ TEMPLATES = {
 
 \end{document}
 """,
-
-    'technical_developer': r"""
-\documentclass[10pt,a4paper]{article}
-\usepackage[left=1.2cm, right=1.2cm, top=1.2cm, bottom=1.2cm]{geometry}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{inconsolata}
-\usepackage{xcolor}
-\usepackage{titlesec}
-\usepackage{enumitem}
-\usepackage{hyperref}
-\usepackage{fontawesome5}
-\usepackage{pagecolor}
-
-\definecolor{background}{HTML}{2F3136}
-\definecolor{accent}{HTML}{00468B}
-\definecolor{textcol}{HTML}{DCDDDE}
-\definecolor{headercol}{HTML}{FFFFFF}
-
-\pagecolor{background}
-\color{textcol}
-\hypersetup{colorlinks=true, urlcolor=accent}
-
-\titleformat{\section}{\normalfont\large\bfseries\ttfamily\color{headercol}}{}{0em}{}
-\titlespacing{\section}{0pt}{10pt}{4pt}
-
-\setlength{\parindent}{0pt}
-\pagestyle{empty}
-\setlist[itemize]{noitemsep, topsep=2pt, leftmargin=15pt, label=\textcolor{accent}{>}}
-
-\begin{document}
-
-% ---- TECH HEADER ----
-{\color{headercol}\Huge\bfseries\ttfamily {{NAME}}} \\[4pt]
-{\color{accent} {{JOB_TITLE}}} \\[6pt]
-\faEnvelope\ \href{mailto:{{EMAIL}}}{{{EMAIL}}} \quad
-\faPhone\ {{PHONE}} \quad
-\faGithub\ \href{{{GITHUB}}}{GitHub} \quad
-\faLinkedin\ \href{{{LINKEDIN}}}{LinkedIn}
-
-\vspace{4pt}
-\textcolor{accent}{\rule{\linewidth}{0.6pt}}
-
-\section{Summary}
-{{SUMMARY}}
-
-\section{Experience}
-{{EXPERIENCE}}
-
-\section{Education}
-{{EDUCATION}}
-
-\section{Skills}
-{{SKILLS}}
-
-\section{Projects}
-{{PROJECTS}}
-
-\end{document}
-""",
+    # Removed duplicate technical_developer entry
 
     'startup_founder': r"""
 \documentclass[10pt,a4paper]{article}
