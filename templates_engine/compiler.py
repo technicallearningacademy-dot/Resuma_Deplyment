@@ -36,14 +36,22 @@ def _compile_with_pdflatex(latex_content, user=None):
         tex_path = os.path.join(tmpdir, 'resume.tex')
         pdf_path = os.path.join(tmpdir, 'resume.pdf')
 
-        # If user has a profile image, copy it to the build dir as profile.jpg
+        # If user has a profile image, copy it to the build dir as a normalized RGB jpg
         if user and hasattr(user, 'profile_image') and user.profile_image:
             try:
+                from PIL import Image
                 img_src = user.profile_image.path
                 if os.path.exists(img_src):
-                    shutil.copy2(img_src, os.path.join(tmpdir, 'profile.jpg'))
+                    # Convert to RGB JPG to resolve transparency/format issues for DOCX
+                    with Image.open(img_src) as img:
+                        rgb_img = img.convert('RGB')
+                        rgb_img.save(os.path.join(tmpdir, 'profile.jpg'), 'JPEG', quality=95)
             except Exception as e:
-                logger.warning(f"Could not copy profile image for latex compilation: {e}")
+                logger.warning(f"Could not normalize profile image for latex: {e}")
+                # Fallback: simple copy if Pillow fails
+                try:
+                    shutil.copy2(user.profile_image.path, os.path.join(tmpdir, 'profile.jpg'))
+                except: pass
 
         with open(tex_path, 'w', encoding='utf-8') as f:
             f.write(latex_content)

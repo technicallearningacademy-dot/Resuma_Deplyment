@@ -16,6 +16,23 @@ def latex_to_docx(latex_content, title='Resume', user=None):
     using pdf2docx to convert that PDF into a Word document.
     """
     try:
+        # Step 0: Optimize LaTeX for Word conversion (Simplify TikZ clippings)
+        # pdf2docx often fails to extract images wrapped in complex TikZ macros.
+        import re
+        # Pattern to find TikZ blocks containing the profile image and simplify them.
+        # This more robust regex matches any tikzpicture containing a profile image includegraphics.
+        # It replaces the entire tikzpicture with just the inner includegraphics.
+        robust_tikz = r'\\begin\{tikzpicture\}.*?(\\includegraphics\[[^\]]*\]\{profile[^}]+\}).*?\\end\{tikzpicture\}'
+        
+        def simplify_image(match):
+            inner_includegraphics = match.group(1)
+            # Ensure we keep the width reasonable for Word
+            if 'width=' not in inner_includegraphics:
+                inner_includegraphics = inner_includegraphics.replace('\\includegraphics', '\\includegraphics[width=2.5cm]')
+            return inner_includegraphics
+            
+        latex_content = re.sub(robust_tikz, simplify_image, latex_content, flags=re.DOTALL)
+
         # Step 1: Compile the exact beautiful layout to a PDF buffer
         pdf_bytes = compile_latex_to_pdf(latex_content, user=user)
         if not pdf_bytes:
