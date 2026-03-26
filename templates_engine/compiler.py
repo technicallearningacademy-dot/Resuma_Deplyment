@@ -10,13 +10,13 @@ import shutil
 logger = logging.getLogger(__name__)
 
 
-def compile_latex_to_pdf(latex_content):
+def compile_latex_to_pdf(latex_content, user=None):
     """Compile LaTeX content to PDF bytes.
     
     Tries pdflatex first, falls back to a simple text-based PDF if not available.
     """
     # Try pdflatex first
-    result = _compile_with_pdflatex(latex_content)
+    result = _compile_with_pdflatex(latex_content, user)
     if result:
         return result
     
@@ -25,7 +25,7 @@ def compile_latex_to_pdf(latex_content):
     return _fallback_pdf(latex_content)
 
 
-def _compile_with_pdflatex(latex_content):
+def _compile_with_pdflatex(latex_content, user=None):
     """Compile with pdflatex if available."""
     if not shutil.which('pdflatex'):
         logger.info('pdflatex not found in PATH')
@@ -35,6 +35,15 @@ def _compile_with_pdflatex(latex_content):
     try:
         tex_path = os.path.join(tmpdir, 'resume.tex')
         pdf_path = os.path.join(tmpdir, 'resume.pdf')
+
+        # If user has a profile image, copy it to the build dir as profile.jpg
+        if user and hasattr(user, 'profile_image') and user.profile_image:
+            try:
+                img_src = user.profile_image.path
+                if os.path.exists(img_src):
+                    shutil.copy2(img_src, os.path.join(tmpdir, 'profile.jpg'))
+            except Exception as e:
+                logger.warning(f"Could not copy profile image for latex compilation: {e}")
 
         with open(tex_path, 'w', encoding='utf-8') as f:
             f.write(latex_content)

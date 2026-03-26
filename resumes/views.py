@@ -224,7 +224,7 @@ def preview_resume_pdf(request, resume_id):
     from templates_engine.compiler import compile_latex_to_pdf
     
     try:
-        pdf_content = compile_latex_to_pdf(latex_content)
+        pdf_content = compile_latex_to_pdf(latex_content, user=resume.user)
         
         if pdf_content:
             return HttpResponse(pdf_content, content_type='application/pdf')
@@ -246,7 +246,7 @@ def download_resume(request, resume_id, file_format):
     if file_format == 'pdf':
         # Generate PDF from LaTeX
         from templates_engine.compiler import compile_latex_to_pdf
-        pdf_content = compile_latex_to_pdf(resume.latex_content)
+        pdf_content = compile_latex_to_pdf(resume.latex_content, user=resume.user)
         if pdf_content:
             response = HttpResponse(pdf_content, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{resume.title}.pdf"'
@@ -291,7 +291,7 @@ def public_preview_resume_pdf(request, token):
     from templates_engine.compiler import compile_latex_to_pdf
     
     try:
-        pdf_content = compile_latex_to_pdf(resume.latex_content)
+        pdf_content = compile_latex_to_pdf(resume.latex_content, user=resume.user)
         if pdf_content:
             return HttpResponse(pdf_content, content_type='application/pdf')
         else:
@@ -307,7 +307,7 @@ def public_download_resume(request, token):
     resume = get_object_or_404(Resume, share_token=token, is_active=True, is_public=True)
     
     from templates_engine.compiler import compile_latex_to_pdf
-    pdf_content = compile_latex_to_pdf(resume.latex_content)
+    pdf_content = compile_latex_to_pdf(resume.latex_content, user=resume.user)
     
     if pdf_content:
         response = HttpResponse(pdf_content, content_type='application/pdf')
@@ -332,7 +332,7 @@ def admin_version_pdf(request, version_id):
     download = request.GET.get('download', '0') == '1'
     
     try:
-        pdf_content = compile_latex_to_pdf(version.latex_content)
+        pdf_content = compile_latex_to_pdf(version.latex_content, user=version.resume.user)
         if pdf_content:
             response = HttpResponse(pdf_content, content_type='application/pdf')
             if download:
@@ -357,7 +357,7 @@ def admin_current_pdf(request, resume_id):
     resume = get_object_or_404(Resume, id=resume_id)
     
     try:
-        pdf_content = compile_latex_to_pdf(resume.latex_content)
+        pdf_content = compile_latex_to_pdf(resume.latex_content, user=resume.user)
         if pdf_content:
             response = HttpResponse(pdf_content, content_type='application/pdf')
             # Always preview in browser for this one

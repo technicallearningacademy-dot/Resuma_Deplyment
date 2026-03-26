@@ -319,3 +319,20 @@ def resend_otp(request):
         
     return redirect('verify_email_otp')
 
+
+@login_required
+@require_POST
+def upload_photo_ajax(request):
+    """AJAX endpoint for uploading profile picture from Builder."""
+    if 'profile_image' not in request.FILES:
+        return JsonResponse({'status': 'error', 'message': 'No image provided.'}, status=400)
+    
+    user = request.user
+    user.profile_image = request.FILES['profile_image']
+    user.save()
+    
+    return JsonResponse({
+        'status': 'success', 
+        'message': 'Image uploaded successfully.',
+        'url': user.profile_image.url
+    })

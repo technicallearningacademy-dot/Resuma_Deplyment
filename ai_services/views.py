@@ -482,7 +482,7 @@ def extract_pdf_ai(request):
 
         if not raw_text.strip():
             print("[DEBUG] No text extracted from PDF", flush=True)
-            return JsonResponse({'error': 'Could not extract text from this PDF. It may be scanned/image-only.'}, status=400)
+            return JsonResponse({'error': 'Could not extract text from this PDF. It may be scanned. Note: The AI cannot extract photos directly from PDFs. To add a profile photo, please use the new "📸 Photo" button next to "📄 PDF".'}, status=400)
 
         print(f"[DEBUG] Raw text extracted, length: {len(raw_text)}", flush=True)
         # Truncate to 8000 chars to stay within token limits

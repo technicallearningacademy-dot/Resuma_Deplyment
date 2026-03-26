@@ -456,6 +456,15 @@
 
                                 <div class="w-px h-3 bg-dark-600 mx-0.5"></div>
 
+                                <label for="photo-upload" id="photo-upload-label"
+                                    class="flex items-center gap-1 px-2 py-1 rounded-lg text-dark-400 hover:text-emerald-400 hover:bg-dark-700 cursor-pointer text-xs transition-all"
+                                    title="Upload a profile photo (JPG/PNG)">
+                                    <span>📸</span>
+                                    <span class="hidden sm:inline">Photo</span>
+                                </label>
+                                <input type="file" id="photo-upload" accept="image/*" class="hidden"
+                                    onchange="uploadProfilePhoto(this)">
+
                                 <label for="pdf-cv-upload" id="pdf-upload-label"
                                     class="flex items-center gap-1 px-2 py-1 rounded-lg text-dark-400 hover:text-primary-400 hover:bg-dark-700 cursor-pointer text-xs transition-all"
                                     title="Import your existing PDF resume">
@@ -996,6 +1005,60 @@
         }
     }
 
+    async function uploadProfilePhoto(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select a valid image file (JPG/PNG).', 'error');
+            return;
+        }
+        
+        showToast('📸 Uploading profile photo...', 'info');
+        setInputBusy(true);
+        
+        const formData = new FormData();
+        formData.append('profile_image', file);
+        
+        try {
+            const response = await fetch('/profile/upload-photo-ajax/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF_TOKEN },
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (response.ok && data.status === 'success') {
+                showToast(data.message, 'success');
+                const photoCard = `
+                    <div class="bg-emerald-900/20 border border-emerald-700/40 rounded-xl p-3 space-y-2 mt-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400">✅</span>
+                            <span class="text-emerald-300 font-semibold text-sm">Profile Image Uploaded!</span>
+                        </div>
+                        <p class="text-xs text-dark-300 mt-1">
+                            Your photo was successfully saved and linked to your profile.
+                        </p>
+                        <p class="text-xs text-dark-400 mt-1">
+                            I will include it in your resume layout when you click <strong class="text-white">Generate ⚡</strong> below.
+                        </p>
+                    </div>`;
+                appendChatMessage('model', photoCard, true, 'pdf', true);
+                const promptEl = document.getElementById('custom-prompt');
+                if (!promptEl.value.trim()) {
+                    promptEl.value = 'Update my resume layout to explicitly include my new profile photo.';
+                }
+            } else {
+                showToast(data.message || 'Upload failed', 'error');
+            }
+        } catch (err) {
+            console.error('Photo upload error:', err);
+            showToast('Network error during upload', 'error');
+        } finally {
+            setInputBusy(false);
+            input.value = '';
+        }
+    }
+
     // PDF file selection — shows bar + pre-fills prompt. Does NOT auto-extract/generate.
     let _selectedPdfFile = null;
     function onPdfSelected(input) {
@@ -1272,9 +1335,35 @@
 
         inputEl.value = '';
         lastUserMessage = ''; // Clear context after generation
-        showTypingIndicator('⚡ Fast-Think Mode Generating...');
-
+        
         const isFastMode = document.getElementById('fast-think-toggle')?.checked || false;
+        
+        showTypingIndicator(isFastMode ? '⚡ Preparing to generate...' : '🤖 Preparing to generate...');
+        
+        // Multi-stage dynamic loading sequence
+        let loadingStep = 0;
+        const loadingSteps = isFastMode ? [
+            '⚡ Fast-Think Mode Generating...',
+            '⚡ Structuring resume layout...',
+            '⚡ Writing high-impact bullet points...',
+            '⚡ Optimizing ATS keywords...',
+            '⚡ Finalizing LaTeX code...',
+            '⚡ Almost done...'
+        ] : [
+            '🤖 Analyzing your profile data...',
+            '🤖 Selecting the best format...',
+            '🤖 Drafting professional content...',
+            '🤖 Refining language and tone...',
+            '🤖 Generating LaTeX code...',
+            '🤖 Almost done...'
+        ];
+        
+        const loadingInterval = setInterval(() => {
+            if (loadingStep < loadingSteps.length) {
+                showTypingIndicator(loadingSteps[loadingStep]);
+                loadingStep++;
+            }
+        }, 3000);
 
         try {
             const response = await fetch('/ai/generate/', {
@@ -1331,6 +1420,7 @@
             appendChatMessage('model', errorMessage, true, 'error');
             showToast('Generation error.', 'error');
         } finally {
+            if (typeof loadingInterval !== 'undefined') clearInterval(loadingInterval);
             removeTypingIndicator();
             if (!isHidden && !window._aiLocked) {
                 setInputBusy(false);
