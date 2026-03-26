@@ -269,7 +269,7 @@ def download_resume(request, resume_id, file_format):
 
     elif file_format == 'docx':
         from templates_engine.converter import latex_to_docx
-        docx_content = latex_to_docx(latex_content, resume.title)
+        docx_content = latex_to_docx(latex_content, resume.title, user=resume.user)
         if docx_content:
             response = HttpResponse(
                 docx_content,

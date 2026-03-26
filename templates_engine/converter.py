@@ -9,7 +9,7 @@ from .compiler import compile_latex_to_pdf
 
 logger = logging.getLogger(__name__)
 
-def latex_to_docx(latex_content, title='Resume'):
+def latex_to_docx(latex_content, title='Resume', user=None):
     """
     Convert LaTeX content to a perfectly formatted DOCX.
     Works by first compiling to PDF to get the exact layout, then 
@@ -17,7 +17,7 @@ def latex_to_docx(latex_content, title='Resume'):
     """
     try:
         # Step 1: Compile the exact beautiful layout to a PDF buffer
-        pdf_bytes = compile_latex_to_pdf(latex_content)
+        pdf_bytes = compile_latex_to_pdf(latex_content, user=user)
         if not pdf_bytes:
             logger.error('Failed to compile LaTeX to PDF during DOCX conversion.')
             return None
