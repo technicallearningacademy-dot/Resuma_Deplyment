@@ -243,10 +243,22 @@ def download_resume(request, resume_id, file_format):
         messages.error(request, "The resume you are trying to download does not exist.")
         return redirect('dashboard')
 
+    # Allow passing the latest editor content directly via POST to ensure it matches the preview
+    latex_content = resume.latex_content
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latex_content = data.get('latex_content', latex_content)
+        except (json.JSONDecodeError, ValueError):
+            latex_content = request.POST.get('latex_content', latex_content)
+    elif 'latex_content' in request.GET:
+        # Fallback for some browsers if we must use GET but want to pass data (limited size)
+        latex_content = request.GET.get('latex_content', latex_content)
+
     if file_format == 'pdf':
         # Generate PDF from LaTeX
         from templates_engine.compiler import compile_latex_to_pdf
-        pdf_content = compile_latex_to_pdf(resume.latex_content, user=resume.user)
+        pdf_content = compile_latex_to_pdf(latex_content, user=resume.user)
         if pdf_content:
             response = HttpResponse(pdf_content, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{resume.title}.pdf"'
@@ -257,7 +269,7 @@ def download_resume(request, resume_id, file_format):
 
     elif file_format == 'docx':
         from templates_engine.converter import latex_to_docx
-        docx_content = latex_to_docx(resume.latex_content, resume.title)
+        docx_content = latex_to_docx(latex_content, resume.title)
         if docx_content:
             response = HttpResponse(
                 docx_content,

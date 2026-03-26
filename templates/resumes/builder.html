@@ -1463,9 +1463,61 @@
     }
 
     async function downloadFormat(format) {
-        showToast('Preparing download...', 'info');
-        await saveResume(); // Ensure latest latex is in DB before generating template file
-        window.location.href = `/resume/${RESUME_ID}/download/${format}/`;
+        showToast(`Preparing ${format.toUpperCase()} download...`, 'info');
+        
+        // Ensure latest content is saved first (optional but good for history)
+        await saveResume(); 
+        
+        const latex = editor.getValue();
+        const csrfToken = CSRF_TOKEN;
+        const timestamp = new Date().getTime();
+        
+        try {
+            // Using POST to send the exact editor content to the compiler
+            const resp = await fetch(`/resume/${RESUME_ID}/download/${format}/?t=${timestamp}`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken 
+                },
+                body: JSON.stringify({ latex_content: latex })
+            });
+            
+            if (!resp.ok) throw new Error('Download failed');
+            
+            const blob = await resp.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            // Trigger browser download
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            
+            // Try to get filename from server or fallback
+            const disposition = resp.headers.get('Content-Disposition');
+            let filename = `resume_${timestamp}.${format}`;
+            if (disposition && disposition.indexOf('filename=') !== -1) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) { 
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+            
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('Download ready!', 'success');
+        } catch (err) {
+            console.error('Download error:', err);
+            showToast('Download failed. Please try saving first.', 'error');
+            // Fallback to old behavior if AJAX fails
+            window.location.href = `/resume/${RESUME_ID}/download/${format}/?v=${timestamp}`;
+        }
     }
 
     function selectTemplate(template) {
