@@ -28,7 +28,9 @@
 - **Llama 3.2-3B** as final emergency fallback
 - Generates complete, valid LaTeX from your profile in seconds
 - Custom prompt support for role-specific optimization
-- Animated typing indicators for AI progress feedback
+- Animated typing indicators with **Dynamic Loading Sequence** (real-time status updates like *"⚡ Structuring resume layout..."*)
+- **Profile Image Integration**: Dedicated 📸 Photo upload button with AJAX support and automatic LaTeX mounting.
+- **Smart PDF Extraction Hints**: AI now guides users to use direct photo uploads when PDF extraction of images is not possible.
 
 ### 📄 14 Professional Templates
 | Template | Style |
@@ -345,6 +347,7 @@ Resume (N:1 to User)
 | `/ai/enhance/` | POST | Enhance selected text |
 | `/ai/optimize/` | POST | ATS keyword optimization |
 | `/profile/setup/` | GET/POST | User profile management |
+| `/profile/upload-photo-ajax/` | POST | Asynchronous profile image upload |
 
 ---
 
