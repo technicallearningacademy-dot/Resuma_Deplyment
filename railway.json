@@ -6,7 +6,7 @@
   },
   "deploy": {
     "startCommand": "gunicorn core.wsgi --bind 0.0.0.0:$PORT --workers 3 --timeout 120",
-    "preDeployCommand": "python manage.py migrate --noinput",
+    "preDeployCommand": "python manage.py migrate --noinput && python create_admin.py",
     "healthcheckPath": "/",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
