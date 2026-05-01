@@ -22,7 +22,7 @@ def compile_latex_to_pdf(latex_content, user=None):
     
     # Fallback: generate a simple PDF using reportlab or return None
     logger.warning('pdflatex not available. Using fallback PDF generation.')
-    return _fallback_pdf(latex_content)
+    return _fallback_pdf(latex_content, user=user)
 
 
 def _compile_with_pdflatex(latex_content, user=None):
@@ -80,16 +80,36 @@ def _compile_with_pdflatex(latex_content, user=None):
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
-def _fallback_pdf(latex_content):
+def _fallback_pdf(latex_content, user=None):
     """Fallback: compile PDF using a public LaTeX API.
     
-    This is used when pdflatex is not installed locally.
+    This is used when pdflatex is not installed locally (e.g. on Railway).
+    Now supports sending the profile image to the remote API.
     """
     # 1. Try robust POST via texlive.net (handles large resumes)
     try:
         import requests
         url = 'https://texlive.net/cgi-bin/latexcgi'
-        files = {'filecontents[]': ('document.tex', latex_content)}
+        
+        # Prepare files list (using list of tuples to allow multiple 'filecontents[]' keys)
+        files = [('filecontents[]', ('document.tex', latex_content))]
+        
+        # If user has a profile image, send it too
+        if user and hasattr(user, 'profile_image') and user.profile_image:
+            try:
+                from PIL import Image
+                import io
+                img_src = user.profile_image.path
+                if os.path.exists(img_src):
+                    with Image.open(img_src) as img:
+                        rgb_img = img.convert('RGB')
+                        img_byte_arr = io.BytesIO()
+                        rgb_img.save(img_byte_arr, format='JPEG', quality=95)
+                        img_bytes = img_byte_arr.getvalue()
+                        files.append(('filecontents[]', ('profile.jpg', img_bytes)))
+            except Exception as e:
+                logger.warning(f"Could not prepare profile image for remote latex: {e}")
+
         data = {'filename[]': 'document.tex', 'engine': 'pdflatex', 'return': 'pdf'}
         
         response = requests.post(url, files=files, data=data, timeout=30)
