@@ -1616,7 +1616,7 @@
     });
 
     function getShareUrl() {
-        const baseUrl = "{{ SITE_URL }}" || window.location.origin;
+        const baseUrl = window.location.origin;
         // Ensure baseUrl doesn't have a trailing slash if we're adding one
         const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         return cleanBase + `/resume/share/{{ resume.share_token }}/`;
