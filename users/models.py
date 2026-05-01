@@ -38,7 +38,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_blocked = models.BooleanField(default=False, help_text='Block user from accessing the platform')
     api_daily_limit = models.PositiveIntegerField(
         default=0,
-        help_text='Custom daily AI prompt limit. 0 = use system default (5)'
+        help_text='Custom daily AI prompt limit. 0 = use system default (10)'
     )
     resume_daily_limit = models.PositiveIntegerField(
         default=0,
@@ -74,7 +74,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def get_ai_daily_limit(self):
         """Effective daily AI prompt limit for this user."""
-        return self.api_daily_limit if self.api_daily_limit > 0 else 5
+        return self.api_daily_limit if self.api_daily_limit > 0 else 10
 
     def can_create_resume_today(self):
         """Check if user can create a resume today based on their personal limit."""

@@ -14,7 +14,7 @@ from django.http import JsonResponse
 
 # System-wide default daily limits per action type
 DAILY_LIMITS = {
-    'generate': 5,     # Resume generation (most expensive)
+    'generate': 10,     # Resume generation (most expensive)
     'enhance': 10,    # Text enhancement (cheap)
     'optimize': 3,    # Keyword optimization
     'extract': 2,     # CV data extraction
@@ -34,7 +34,7 @@ def _get_limit_for_user(user, action_type):
     Get the effective daily limit for a user and action.
     Respects the admin-set api_daily_limit override for ALL actions.
     """
-    default = DAILY_LIMITS.get(action_type, 5)
+    default = DAILY_LIMITS.get(action_type, 10)
     # Admin can set a custom per-user limit (0 = use default)
     custom = getattr(user, 'api_daily_limit', 0)
     return custom if custom > 0 else default
@@ -68,7 +68,7 @@ def check_rate_limit(user, action_type):
         used = get_usage_today(user, action_type=None)
     else:
         # System defaults: Per-action bucketing
-        limit = DAILY_LIMITS.get(action_type, 5)
+        limit = DAILY_LIMITS.get(action_type, 10)
         used = get_usage_today(user, action_type=action_type)
         
     allowed = used < limit

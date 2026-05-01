@@ -81,10 +81,10 @@ def limit_api_10(modeladmin, request, queryset):
     messages.info(request, 'AI daily limit set to 10 for selected users.')
 
 
-@admin.action(description='🔄 Reset AI limit to system default (5/day)')
+@admin.action(description='🔄 Reset AI limit to system default (10/day)')
 def reset_api_limit(modeladmin, request, queryset):
     queryset.update(api_daily_limit=0)
-    messages.success(request, 'AI daily limit reset to default (5/day).')
+    messages.success(request, 'AI daily limit reset to default (10/day).')
 
 
 # ─── Main User Admin ─────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ class CustomUserAdmin(UserAdmin):
                 '<div style="color:#b91c1c;font-weight:700;margin-bottom:5px">🛡️ ADMINISTRATIVE OVERRIDE CONTROL</div>'
                 '<div style="color:#7f1d1d;font-size:12px">'
                 '• Block users to prevent all platform access. <br>'
-                '• Set <b>AI Limit</b> to 0 for system default (5/day). <br>'
+                '• Set <b>AI Limit</b> to 0 for system default (10/day). <br>'
                 '• Set <b>Resume Limit</b> to 0 for system default (2/day). <br>'
                 '• You can manually reset "Resumes Created Today" by setting it to 0.'
                 '</div>'
@@ -223,7 +223,7 @@ class CustomUserAdmin(UserAdmin):
         today = now().date()
         count = AIPromptLog.objects.filter(user=obj, created_at__date=today).count()
         # Get their effective limit
-        limit = obj.api_daily_limit if obj.api_daily_limit > 0 else 5
+        limit = obj.api_daily_limit if obj.api_daily_limit > 0 else 10
         if count == 0:
             color = '#9ca3af'
         elif count >= limit:
@@ -243,7 +243,7 @@ class CustomUserAdmin(UserAdmin):
 
     def api_limit_display(self, obj):
         if obj.api_daily_limit == 0:
-            return format_html('<span style="color:#9ca3af">Default (5)</span>')
+            return format_html('<span style="color:#9ca3af">Default (10)</span>')
         if obj.api_daily_limit <= 2:
             return format_html('<span style="color:#dc2626;font-weight:600">⚠️ {}/day</span>', obj.api_daily_limit)
         return format_html('<span style="color:#7c3aed;font-weight:600">{}/day</span>', obj.api_daily_limit)
@@ -280,7 +280,7 @@ class CustomUserAdmin(UserAdmin):
         today = now().date()
         total_ai = AIPromptLog.objects.filter(user=obj).count()
         today_ai = AIPromptLog.objects.filter(user=obj, created_at__date=today).count()
-        ai_limit = obj.api_daily_limit if obj.api_daily_limit > 0 else 5
+        ai_limit = obj.api_daily_limit if obj.api_daily_limit > 0 else 10
         
         total_res = obj.resumes.count()
         today_res = obj.resumes_created_today
