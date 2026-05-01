@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load socialaccount %}
 {% block title %}Sign In{% endblock %}
 
 {% block content %}
@@ -31,7 +32,7 @@
             <p class="text-dark-400 text-center text-sm mb-8">Sign in to your account</p>
 
             <!-- Google OAuth -->
-            <a href="{% url 'socialaccount_signup' %}"
+            <a href="{% provider_login_url 'google' %}"
                 class="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border border-dark-600 hover:border-dark-500 bg-dark-800/50 hover:bg-dark-700/50 transition-all mb-6">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                     <path
