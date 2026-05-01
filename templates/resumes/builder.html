@@ -109,44 +109,56 @@
         pointer-events: none;
         position: relative;
         border-color: #6366f1 !important;
-        background: rgba(15, 23, 42, 0.6) !important;
+        background: rgba(30, 41, 59, 0.4) !important;
+        backdrop-filter: blur(8px);
+        transform: scale(0.98);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden;
+        box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.05);
     }
 
     .template-card.loading h4,
     .template-card.loading p {
         color: transparent !important;
-        background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+        background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
         background-size: 200% 100%;
-        animation: skeleton-pulse 1.5s infinite linear;
-        border-radius: 4px;
-        width: fit-content;
+        animation: skeleton-pulse 2s infinite ease-in-out;
+        border-radius: 99px;
+        width: 120px;
     }
 
     .template-card.loading p {
-        width: 80%;
-        margin-top: 8px;
+        width: 180px;
+        margin-top: 10px;
+        opacity: 0.5;
     }
 
+    /* Premium Rotating Gradient Ring */
     .template-card.loading::after {
         content: "";
         position: absolute;
         top: 50%;
         right: 1.5rem;
         transform: translateY(-50%);
-        width: 1.5rem;
-        height: 1.5rem;
-        border: 1.5px solid rgba(99, 102, 241, 0.1);
-        border-top-color: #818cf8;
+        width: 1.75rem;
+        height: 1.75rem;
         border-radius: 50%;
-        animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        z-index: 10;
-        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        padding: 2px;
+        background: conic-gradient(from 0deg, transparent 30%, #6366f1, #a855f7, #6366f1);
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
+        mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #fff 0);
+        animation: spin-gradient 1s linear infinite;
+        z-index: 20;
+    }
+
+    @keyframes spin-gradient {
+        from { transform: translateY(-50%) rotate(0deg); }
+        to { transform: translateY(-50%) rotate(360deg); }
     }
 
     @keyframes skeleton-pulse {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
     }
 
     /* Spinner */
