@@ -100,11 +100,12 @@ def get_chat_edit_system_prompt(profile_data, template_style='modern_ats_clean')
     extra_rules = ""
     if template_style == 'technical_developer':
         extra_rules = """
-7. CRITICAL (JOBS): You MUST use the \jobtitle and \jobsubtitle macros. Example:
+7. CRITICAL (IMAGE): You MUST preserve the \IfFileExists{profile.jpg}{...}{...} guard around \includegraphics. NEVER remove this check.
+8. CRITICAL (JOBS): You MUST use the \jobtitle and \jobsubtitle macros. Example:
    \jobtitle{Company Name}{Start Year -- End Year}
    \jobsubtitle{Your Job Title}
    \begin{itemize} ... \end{itemize}
-8. CRITICAL (SKILLS): Group them in categories and use \skilltag for EACH skill individually. Example:
+9. CRITICAL (SKILLS): Group them in categories and use \skilltag for EACH skill individually. Example:
    \textbf{\color{accentgold}\small Languages}\quad
    \skilltag{Python} \skilltag{Java} \\[5pt]
 """

@@ -16,6 +16,7 @@ staticfiles/
 .env
 venv/
 env/
+.venv/
 
 # IDE
 .vscode/
@@ -35,3 +36,6 @@ node_modules/
 *.synctex.gz
 test_*.tex
 failed_*.tex
+
+# Temporary files
+tmp/

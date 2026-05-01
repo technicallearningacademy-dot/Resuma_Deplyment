@@ -10,8 +10,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# LongCat API Configuration
-LONGCAT_API_KEY = "ak_2Xz6Vo0GG0Wx54x5hc8Zt4A76io3g"
+# LongCat API Configuration (Stored in settings for security)
 LONGCAT_API_URL = "https://api.longcat.chat/openai/v1/chat/completions"
 LONGCAT_MODEL = "LongCat-Flash-Chat"
 
@@ -21,67 +20,139 @@ HF_FALLBACK_MODEL = "HuggingFaceH4/zephyr-7b-beta"
 
 
 class GeminiClient:
-    """AI client with Gemini primary + Hugging Face fallback."""
+    """AI client with Gemini multi-key rotation + Multi-provider fallback."""
 
     def __init__(self):
-        from .prompts import get_chat_system_prompt
-        # Configure Gemini with a system-level guardrail to restrict to resume topics
-        api_key = settings.GEMINI_API_KEY
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.gemini_model = genai.GenerativeModel(
-            'models/gemini-2.0-flash',
-            system_instruction=get_chat_system_prompt()  # Global restriction applied to ALL calls
-        )
-
-        # Configure Hugging Face (works without token for free models) with 85s timeout
-        hf_token = getattr(settings, 'HF_API_TOKEN', None) or None
+        # Configure Gemini with a system-level guardrail
+        # Supports multiple keys separated by commas in .env
+        raw_keys = getattr(settings, 'GEMINI_API_KEY', '')
+        self.gemini_keys = [k.strip() for k in str(raw_keys).split(',') if k.strip()]
+        self.current_key_index = 0
+        
+        # Initialize primary model with the first key
+        self._set_active_gemini_key()
+        
+        # Configure Hugging Face (works without token for free models)
+        hf_token = getattr(settings, 'HF_API_TOKEN', None)
         self.hf_client = InferenceClient(token=hf_token, timeout=85)
 
+    def _set_active_gemini_key(self):
+        """Configure the generativeai library with the current key in the rotation."""
+        from .prompts import get_chat_system_prompt
+        if not self.gemini_keys:
+            logger.error("No GEMINI_API_KEY found in settings.")
+            return
+
+        key = self.gemini_keys[self.current_key_index]
+        try:
+            genai.configure(api_key=key)
+            self.gemini_model = genai.GenerativeModel(
+                'models/gemini-2.0-flash',
+                system_instruction=get_chat_system_prompt()
+            )
+            logger.info(f"AI Client: Rotated to Gemini Key #{self.current_key_index + 1}")
+        except Exception as e:
+            logger.error(f"Failed to configure Gemini with key {self.current_key_index}: {e}")
+
+    def _rotate_gemini_key(self):
+        """Switch to the next Gemini key if the current one hit a quota (429)."""
+        if len(self.gemini_keys) <= 1:
+            return False # No other keys to try
+            
+        self.current_key_index = (self.current_key_index + 1) % len(self.gemini_keys)
+        self._set_active_gemini_key()
+        return True
 
     def generate(self, prompt, max_tokens=6000, fast_mode=False):
-        """Generate text using Gemini 2.0 Flash with automatic fallback to Hugging Face."""
+        """Generate text using a multi-tiered resilience approach."""
         temperature = 0.1 if fast_mode else 0.4
         out_tokens = min(max_tokens, 4000) if fast_mode else max_tokens
 
-        # Attempt 1: Gemini
-        try:
-            response = self.gemini_model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=out_tokens,
-                    temperature=temperature,
-                )
-            )
-            # Safe token extraction from Gemini usage_metadata
+        # Tiered Fallback with Error Tracking
+        tier_errors = []
+
+        # Tier 1: Gemini (With Rotation)
+        attempts = 0
+        max_rotation_attempts = len(self.gemini_keys)
+        gemini_failed = False
+        
+        while attempts < max_rotation_attempts:
             try:
-                tokens = response.usage_metadata.total_token_count
-            except (AttributeError, ValueError):
-                tokens = 0
-                
-            logger.info(f'[MONITOR] Tier 1 Success: Gemini ({tokens} tokens)')
-            return {"content": response.text, "provider": "Gemini", "tokens": tokens}
-        except Exception as e:
-            logger.warning(f'[MONITOR] Tier 1 Gemini failed ({e}), falling back...')
+                response = self.gemini_model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=out_tokens,
+                        temperature=temperature,
+                    )
+                )
+                tokens = getattr(response, 'usage_metadata', {}).total_token_count if hasattr(response, 'usage_metadata') else 0
+                logger.info(f'[MONITOR] Tier 1 Success: Gemini Key #{self.current_key_index+1} ({tokens} tokens)')
+                return {"content": response.text, "provider": "Gemini", "tokens": tokens}
+            except Exception as e:
+                err_msg = str(e)
+                if "429" in err_msg or "ResourceExhausted" in err_msg or "Quota" in err_msg:
+                    logger.warning(f'[MONITOR] Gemini Key #{self.current_key_index+1} hit quota limit. Rotating...')
+                    if not self._rotate_gemini_key():
+                        tier_errors.append(f"Gemini: All {len(self.gemini_keys)} keys hit quota")
+                        gemini_failed = True
+                        break # No more keys to try
+                    attempts += 1
+                else:
+                    logger.warning(f'[MONITOR] Tier 1 Gemini critical error: {e}. Moving to backup providers...')
+                    tier_errors.append(f"Gemini: {err_msg[:100]}")
+                    gemini_failed = True
+                    break
+        
+        if not gemini_failed and attempts >= max_rotation_attempts:
+            tier_errors.append(f"Gemini: No keys available")
 
-        # Attempt 2: LongCat API
+        # Tier 2: Groq (Industry Standard Performance)
         try:
-            return self._generate_longcat(prompt, max_tokens)
+            groq_key = getattr(settings, 'GROQ_API_KEY', None)
+            if groq_key:
+                return self._generate_groq(prompt, groq_key, max_tokens)
+            else:
+                tier_errors.append("Groq: No API Key")
         except Exception as e:
-            logger.warning(f'[MONITOR] Tier 2 LongCat failed ({e}), falling back...')
+            logger.warning(f'[MONITOR] Tier 2 Groq fallback failed: {e}')
+            tier_errors.append(f"Groq: {str(e)[:100]}")
 
-        # Attempt 3: Hugging Face (Qwen2.5-Coder)
+        # Tier 3: LongCat (User Recommended Backup)
+        try:
+            lc_key = getattr(settings, 'LONGCAT_API_KEY', None)
+            if lc_key:
+                return self._generate_longcat(prompt, lc_key, max_tokens)
+            else:
+                tier_errors.append("LongCat: No API Key")
+        except Exception as e:
+            logger.warning(f'[MONITOR] Tier 3 LongCat failed ({e}), trying Hugging Face...')
+            tier_errors.append(f"LongCat: {str(e)[:100]}")
+
+        # Tier 4: Hugging Face (Primary)
         try:
             return self._generate_hf(prompt, HF_MODEL, max_tokens)
         except Exception as e:
-            logger.warning(f'[MONITOR] Tier 3 HF-Primary failed ({e}), trying fallback...')
+            logger.warning(f'[MONITOR] Tier 4 HF-Primary failed ({e}), trying fallback...')
+            tier_errors.append(f"HF (Qwen): {str(e)[:100]}")
 
-        # Attempt 4: Hugging Face fallback
+        # Tier 5: Hugging Face (Fallback)
         try:
             return self._generate_hf(prompt, HF_FALLBACK_MODEL, max_tokens)
         except Exception as e:
-            logger.warning(f'[MONITOR] Tier 4 HF-Fallback failed ({e}). Trying Local Ollama...')
+            logger.warning(f'[MONITOR] Tier 5 HF-Fallback failed ({e}). Trying Local Ollama...')
+            tier_errors.append(f"HF (Zephyr): {str(e)[:100]}")
+            
+        # Final Tier: Local Ollama
+        try:
             return self._generate_local(prompt, max_tokens)
+        except Exception as e_local:
+            error_summary = " | ".join(tier_errors)
+            logger.error(f'[MONITOR] All AI providers failed: {error_summary}')
+            model = self._get_local_ollama_model()
+            if not model:
+                raise Exception(f"All AI providers failed. Reasons: {error_summary}. (No local Ollama found on port 11434)")
+            else:
+                raise Exception(f"All AI providers failed. Reasons: {error_summary}. Local Ollama Error: {str(e_local)}")
 
     def _get_local_ollama_model(self):
         """Check if Ollama is running and return the first available model."""
@@ -99,7 +170,7 @@ class GeminiClient:
         """Generate text using a local Ollama instance."""
         model = self._get_local_ollama_model()
         if not model:
-            raise Exception("All AI providers (Gemini, HuggingFace) failed due to quota limits, and no local Ollama instance was found on port 11434. Please install Ollama or try again later.")
+            raise Exception("All AI providers (Gemini, Groq, LongCat, HuggingFace) failed due to quota limits, and no local Ollama instance was found on port 11434. Please install Ollama or try again later.")
             
         logger.info(f"Routing generation to local Ollama model: {model}")
         try:
@@ -134,7 +205,7 @@ class GeminiClient:
         """Generate chat response using a local Ollama instance."""
         model = self._get_local_ollama_model()
         if not model:
-            raise Exception("All AI providers (Gemini, HuggingFace) failed due to quota limits, and no local Ollama instance was found on port 11434. Please install Ollama or try again later.")
+            raise Exception("All AI providers (Gemini, Groq, LongCat, HuggingFace) failed due to quota limits, and no local Ollama instance was found on port 11434. Please install Ollama or try again later.")
             
         logger.info(f"Routing chat generation to local Ollama model: {model}")
         try:
@@ -162,11 +233,11 @@ class GeminiClient:
             logger.error(f"Local Ollama chat failed: {e}")
             raise Exception(f"Local Ollama model {model} failed: {str(e)}")
 
-    def _generate_longcat(self, prompt, max_tokens=6000):
+    def _generate_longcat(self, prompt, api_key, max_tokens=6000):
         """Generate text using LongCat API platform."""
         import requests
         headers = {
-            "Authorization": f"Bearer {LONGCAT_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         data = {
@@ -188,17 +259,17 @@ class GeminiClient:
                     content += '\n\\end{itemize}'
                 content += '\n\\end{document}'
                 
-            logger.info(f'[MONITOR] Tier 2 Success: LongCat API ({tokens} tokens)')
+            logger.info(f'[MONITOR] Tier 3 Success: LongCat API ({tokens} tokens)')
             return {"content": content, "provider": "LongCat API", "tokens": tokens}
         except Exception as e:
             logger.error(f"LongCat generation failed: {e}")
             raise Exception(f"LongCat API failed: {str(e)}")
 
-    def _generate_longcat_chat(self, messages, max_tokens=6000):
-        """Generate chat response using LongCat API platform."""
+    def _generate_longcat_chat(self, messages, api_key, max_tokens=6000):
+        """Generate chat response using LongCat API."""
         import requests
         headers = {
-            "Authorization": f"Bearer {LONGCAT_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         data = {
@@ -207,24 +278,56 @@ class GeminiClient:
             "max_tokens": min(max_tokens, 8000),
             "temperature": 0.7
         }
-        try:
-            resp = requests.post(LONGCAT_API_URL, headers=headers, json=data, timeout=120)
-            resp.raise_for_status()
-            resp_data = resp.json()
-            content = resp_data['choices'][0]['message']['content']
-            tokens = resp_data.get('usage', {}).get('total_tokens', 0)
-            
-            if r'\begin{document}' in content and r'\end{document}' not in content:
-                open_items = content.count(r'\begin{itemize}') - content.count(r'\end{itemize}')
-                for _ in range(max(0, open_items)):
-                    content += '\n\\end{itemize}'
-                content += '\n\\end{document}'
-                
-            logger.info(f'[MONITOR] Tier 2 Success: LongCat Chat ({tokens} tokens)')
-            return {"content": content, "provider": "LongCat API", "tokens": tokens}
-        except Exception as e:
-            logger.error(f"LongCat chat generation failed: {e}")
-            raise Exception(f"LongCat API chat failed: {str(e)}")
+        resp = requests.post(LONGCAT_API_URL, headers=headers, json=data, timeout=120)
+        resp.raise_for_status()
+        resp_data = resp.json()
+        content = resp_data['choices'][0]['message']['content']
+        tokens = resp_data.get('usage', {}).get('total_tokens', 0)
+        
+        logger.info(f'[MONITOR] Chat Success: LongCat API ({tokens} tokens)')
+        return {"content": content, "provider": "LongCat API", "tokens": tokens}
+
+    def _generate_groq(self, prompt, api_key, max_tokens=6000):
+        """Generate text using Groq API (High performance fallback)."""
+        import requests
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "llama-3.1-70b-versatile",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": min(max_tokens, 8000),
+            "temperature": 0.7
+        }
+        resp = requests.post(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+        resp_data = resp.json()
+        content = resp_data['choices'][0]['message']['content']
+        tokens = resp_data.get('usage', {}).get('total_tokens', 0)
+        
+        logger.info(f'[MONITOR] Tier 2 Success: Groq API ({tokens} tokens)')
+        return {"content": content, "provider": "Groq API", "tokens": tokens}
+
+    def _generate_groq_chat(self, messages, api_key, max_tokens=6000):
+        """Generate chat response using Groq API."""
+        import requests
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "llama-3.1-70b-versatile",
+            "messages": messages,
+            "max_tokens": min(max_tokens, 8000),
+            "temperature": 0.7
+        }
+        resp = requests.post(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+        content = resp.json()['choices'][0]['message']['content']
+        return {"content": content, "provider": "Groq API"}
 
     def _generate_hf(self, prompt, model, max_tokens=6000):
         """Generate text using Hugging Face Inference API."""
@@ -349,54 +452,95 @@ class GeminiClient:
                 res_dict['requires_edit'] = requires_edit
                 return res_dict
 
-        # Attempt 1: Gemini Chat
-        try:
-            chat = self.gemini_model.start_chat(history=gemini_history)
-            response = chat.send_message(
-                user_message,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=1024,
-                    temperature=0.8,
-                )
-            )
-            # Safe token extraction from Gemini usage_metadata
+        # Tiered Fallback with Error Tracking
+        tier_errors = []
+
+        # Attempt 1: Gemini Chat (With Rotation)
+        attempts = 0
+        gemini_failed = False
+        while attempts < len(self.gemini_keys):
             try:
-                tokens = response.usage_metadata.total_token_count
-            except (AttributeError, ValueError):
-                tokens = 0
-                
-            logger.info(f'[MONITOR] Chat Success: Gemini ({tokens} tokens)')
-            return _parse_chat_response({"content": response.text, "provider": "Gemini", "tokens": tokens})
-        except Exception as e:
-            logger.warning(f'[MONITOR] Gemini chat failed ({e}), falling back...')
+                chat = self.gemini_model.start_chat(history=gemini_history)
+                response = chat.send_message(
+                    user_message,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=1024,
+                        temperature=0.8,
+                    )
+                )
+                tokens = getattr(response, 'usage_metadata', {}).total_token_count if hasattr(response, 'usage_metadata') else 0
+                logger.info(f'[MONITOR] Chat Success: Gemini Key #{self.current_key_index+1} ({tokens} tokens)')
+                return _parse_chat_response({"content": response.text, "provider": "Gemini", "tokens": tokens})
+            except Exception as e:
+                err_msg = str(e)
+                if "429" in err_msg or "ResourceExhausted" in err_msg or "Quota" in err_msg:
+                    logger.warning(f'[MONITOR] Gemini Chat Key #{self.current_key_index+1} hit quota. Rotating...')
+                    if not self._rotate_gemini_key(): 
+                        tier_errors.append(f"Gemini: All {len(self.gemini_keys)} keys hit quota")
+                        gemini_failed = True
+                        break
+                    attempts += 1
+                else:
+                    logger.warning(f'[MONITOR] Tier 1 Gemini chat critical error ({e}). Trying backups...')
+                    tier_errors.append(f"Gemini: {err_msg[:100]}")
+                    gemini_failed = True
+                    break
+
+        if not gemini_failed and attempts >= len(self.gemini_keys):
+            tier_errors.append(f"Gemini: No keys available")
 
         hf_messages.append({"role": "user", "content": user_message})
-        
-        # Attempt 2: LongCat API
+
+        # Attempt 2: Groq Chat
         try:
-            lc_res = self._generate_longcat_chat(hf_messages, max_tokens=1024)
-            return _parse_chat_response(lc_res)
+            groq_key = getattr(settings, 'GROQ_API_KEY', None)
+            if groq_key:
+                res = self._generate_groq_chat(hf_messages, groq_key, max_tokens=1024)
+                return _parse_chat_response(res)
+            else:
+                tier_errors.append("Groq: No API Key")
+        except Exception as e:
+            logger.warning(f'[MONITOR] Groq chat fallback failed: {e}')
+            tier_errors.append(f"Groq: {str(e)[:100]}")
+        
+        # Attempt 3: LongCat API
+        try:
+            lc_key = getattr(settings, 'LONGCAT_API_KEY', None)
+            if lc_key:
+                lc_res = self._generate_longcat_chat(hf_messages, lc_key, max_tokens=1024)
+                return _parse_chat_response(lc_res)
+            else:
+                tier_errors.append("LongCat: No API Key")
         except Exception as e:
             logger.warning(f'[MONITOR] LongCat chat failed ({e}), falling back...')
+            tier_errors.append(f"LongCat: {str(e)[:100]}")
 
-        # Attempt 3: Hugging Face
+        # Attempt 4: Hugging Face
         try:
             hf_res = self._generate_hf_chat(hf_messages, HF_MODEL, max_tokens=1024)
             return _parse_chat_response(hf_res)
         except Exception as e:
             logger.warning(f'[MONITOR] HF chat failed ({e}), trying fallback...')
+            tier_errors.append(f"HF (Qwen): {str(e)[:100]}")
 
         try:
             hf_fb_res = self._generate_hf_chat(hf_messages, HF_FALLBACK_MODEL, max_tokens=1024)
             return _parse_chat_response(hf_fb_res)
         except Exception as e:
             logger.warning(f'[MONITOR] HF chat fallback failed: {e}. Trying Local Ollama...')
-            try:
-                local_res = self._generate_local_chat(hf_messages, max_tokens=1024)
-                return _parse_chat_response(local_res)
-            except Exception as e_local:
-                logger.error(f'[MONITOR] All AI providers failed for chat: {e_local}')
-                raise Exception('AI service unavailable. Please check your quota or start Ollama.')
+            tier_errors.append(f"HF (Zephyr): {str(e)[:100]}")
+            
+        try:
+            local_res = self._generate_local_chat(hf_messages, max_tokens=1024)
+            return _parse_chat_response(local_res)
+        except Exception as e_local:
+            error_summary = " | ".join(tier_errors)
+            logger.error(f'[MONITOR] All AI providers failed for chat: {error_summary}')
+            model = self._get_local_ollama_model()
+            if not model:
+                raise Exception(f"All AI providers failed. Reasons: {error_summary}. (No local Ollama found on port 11434)")
+            else:
+                raise Exception(f"All AI providers failed. Reasons: {error_summary}. Local Ollama Error: {str(e_local)}")
 
     def extract_from_pdf(self, pdf_text):
         """
@@ -460,41 +604,91 @@ class GeminiClient:
         temperature = 0.1 if fast_mode else 0.7
         max_tokens_val = 4000 if fast_mode else 8192
 
-        # Attempt 1: Gemini (Using start_chat to maintain exact structure expectations)
-        try:
-            custom_model = genai.GenerativeModel('models/gemini-2.0-flash', system_instruction=system_instruction)
-            chat = custom_model.start_chat(history=gemini_history)
-            response = chat.send_message(
-                context_msg,
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=max_tokens_val,
-                    temperature=temperature,
+        # Tiered Fallback with Error Tracking
+        tier_errors = []
+
+        # Tier 1: Gemini (With Rotation)
+        attempts = 0
+        gemini_failed = False
+        while attempts < len(self.gemini_keys):
+            try:
+                custom_model = genai.GenerativeModel('models/gemini-2.0-flash', system_instruction=system_instruction)
+                chat = custom_model.start_chat(history=gemini_history)
+                response = chat.send_message(
+                    context_msg,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=max_tokens_val,
+                        temperature=temperature,
+                    )
                 )
-            )
-            tokens = getattr(response, 'usage_metadata', {}).total_token_count if hasattr(response, 'usage_metadata') else 0
-            logger.info(f'[MONITOR] Edit Success: Gemini ({tokens} tokens)')
-            return {"content": response.text, "provider": "Gemini", "tokens": tokens}
-        except Exception as e:
-            logger.warning(f'[MONITOR] Gemini Edit failed ({e}), falling back...')
-            
-        # Attempt 2: LongCat API
+                tokens = getattr(response, 'usage_metadata', {}).total_token_count if hasattr(response, 'usage_metadata') else 0
+                logger.info(f'[MONITOR] Edit Success: Gemini Key #{self.current_key_index+1} ({tokens} tokens)')
+                return {"content": response.text, "provider": "Gemini", "tokens": tokens}
+            except Exception as e:
+                err_msg = str(e)
+                if "429" in err_msg or "ResourceExhausted" in err_msg or "Quota" in err_msg:
+                    logger.warning(f'[MONITOR] Gemini Edit Key #{self.current_key_index+1} hit quota. Rotating...')
+                    if not self._rotate_gemini_key(): 
+                        tier_errors.append(f"Gemini: All {len(self.gemini_keys)} keys hit quota")
+                        gemini_failed = True
+                        break
+                    attempts += 1
+                else:
+                    logger.warning(f'[MONITOR] Tier 1 Gemini edit critical error: {e}. Trying backups...')
+                    tier_errors.append(f"Gemini: {err_msg[:100]}")
+                    gemini_failed = True
+                    break
+        
+        if not gemini_failed and attempts >= len(self.gemini_keys):
+            tier_errors.append(f"Gemini: No keys available")
+
+        # Tier 2: Groq Chat
         try:
-            return self._generate_longcat_chat(hf_history, max_tokens=max_tokens_val)
+            groq_key = getattr(settings, 'GROQ_API_KEY', None)
+            if groq_key:
+                return self._generate_groq_chat(hf_history, groq_key, max_tokens=max_tokens_val)
+            else:
+                tier_errors.append("Groq: No API Key")
+        except Exception as e:
+            logger.warning(f'[MONITOR] Tier 2 Groq Edit fallback failed: {e}')
+            tier_errors.append(f"Groq: {str(e)[:100]}")
+            
+        # Tier 3: LongCat API
+        try:
+            lc_key = getattr(settings, 'LONGCAT_API_KEY', None)
+            if lc_key:
+                return self._generate_longcat_chat(hf_history, lc_key, max_tokens=max_tokens_val)
+            else:
+                tier_errors.append("LongCat: No API Key")
         except Exception as e:
             logger.warning(f'LongCat primary model failed ({e}), trying Hugging Face...')
+            tier_errors.append(f"LongCat: {str(e)[:100]}")
 
-        # Attempt 3: Hugging Face (Qwen2.5-Coder)
+        # Tier 4: Hugging Face (Qwen2.5-Coder)
         try:
             return self._generate_hf_chat(hf_history, HF_MODEL)
         except Exception as e:
             logger.warning(f'HF primary model failed ({e}), trying fallback...')
+            tier_errors.append(f"HF (Qwen): {str(e)[:100]}")
 
-        # Attempt 3: Hugging Face fallback
+        # Tier 5: Hugging Face fallback
         try:
             return self._generate_hf_chat(hf_history, HF_FALLBACK_MODEL)
         except Exception as e:
-            logger.warning(f'HF chat fallback failed: {e}. Trying Local Ollama...')
+            logger.warning(f'HF fallback model failed ({e}). Trying Local Ollama...')
+            tier_errors.append(f"HF (Zephyr): {str(e)[:100]}")
+            
+        # Final Tier: Local Ollama
+        try:
             return self._generate_local_chat(hf_history, max_tokens=max_tokens_val)
+        except Exception as e_local:
+            error_summary = " | ".join(tier_errors)
+            logger.error(f'[MONITOR] All AI providers failed: {error_summary}')
+            model = self._get_local_ollama_model()
+            if not model:
+                raise Exception(f"All AI providers failed. Reasons: {error_summary}. (No local Ollama found on port 11434)")
+            else:
+                raise Exception(f"All AI providers failed. Reasons: {error_summary}. Local Ollama Error: {str(e_local)}")
 
     def _generate_hf_chat(self, messages, model, max_tokens=6000):
         """Generate text using Hugging Face Inference API with conversation history."""

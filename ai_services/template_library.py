@@ -154,6 +154,7 @@ TEMPLATES = {
 \end{tikzpicture}
 
 \vspace{0pt}
+% CRITICAL: DO NOT REMOVE THIS IfFileExists GUARD. IT PREVENTS COMPILATION FAILURE IF PHOTO IS MISSING.
 \IfFileExists{profile.jpg}{
 \begin{minipage}[c]{0.78\textwidth}
   {\color{headercol}\fontsize{26}{30}\selectfont\bfseries\sffamily {{NAME}}}\\[3pt]

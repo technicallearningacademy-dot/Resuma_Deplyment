@@ -22,8 +22,11 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
 ]
 
+# Always serve media files — Railway doesn't have a separate Nginx server.
+# Static files are handled by WhiteNoise middleware.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Customizing Admin Panel

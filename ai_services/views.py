@@ -347,7 +347,7 @@ def _get_profile_data(user):
 
 
 def _clean_latex(text):
-    """Remove markdown code fences from AI-generated LaTeX."""
+    """Remove markdown code fences and sanitize Unicode characters."""
     text = text.strip()
     if text.startswith('```latex'):
         text = text[len('```latex'):].strip()
@@ -355,6 +355,28 @@ def _clean_latex(text):
         text = text[3:].strip()
     if text.endswith('```'):
         text = text[:-3].strip()
+    
+    return _sanitize_latex(text)
+
+
+def _sanitize_latex(text):
+    """Clean up problematic Unicode characters and ensure image guards."""
+    # Replace the replacement character (U+FFFD) which causes LaTeX to fail
+    text = text.replace('\ufffd', ' -- ')
+    
+    # Replace common smart characters that cause issues with standard pdflatex
+    replacements = {
+        '\u2013': '--',   # en dash
+        '\u2014': '---',  # em dash
+        '\u2018': "'",    # smart single quote
+        '\u2019': "'",    # smart single quote
+        '\u201c': '"',    # smart double quote
+        '\u201d': '"',    # smart double quote
+        '\u2022': r'\textbullet', # bullet
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
     return text
 
 

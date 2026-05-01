@@ -4,13 +4,14 @@ Django settings for the AI Resume Builder.
 import os
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-me')
 DEBUG = config('DEBUG', default=True, cast=bool)
-# Allow all IPs so the server can be accessed from other devices on the LAN
-ALLOWED_HOSTS = ['*']
+# In production, read from env; in dev allow all
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.app']
 
 # Base URL for sharing links (Gmail, WhatsApp, Copy Link)
@@ -85,13 +86,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # =============================================================================
-# Database
+# Database — Uses DATABASE_URL in production (Railway PostgreSQL),
+#             falls back to SQLite for local development
 # =============================================================================
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # =============================================================================
@@ -196,6 +199,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # =============================================================================
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 HF_API_TOKEN = config('HF_API_TOKEN', default='')  # Optional: Hugging Face (works without token too)
+GROQ_API_KEY = config('GROQ_API_KEY', default='')   # Optional: Groq Cloud (High performance fallback)
+LONGCAT_API_KEY = config('LONGCAT_API_KEY', default='') # Optional: LongCat API (User recommended fallback)
 
 # =============================================================================
 # File upload settings
