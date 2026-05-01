@@ -1719,14 +1719,13 @@
             }
 
             currentPdfUrl = URL.createObjectURL(blob);
-
-            // Assuming most browsers have native PDF support (Chromium/Firefox/Safari)
-            // It will render natively inside the iframe
-            iframe.src = currentPdfUrl;
-
-            // Hide placeholder, show iframe
-            placeholder.classList.add('hidden');
-            iframe.classList.remove('hidden');
+            const urlWithNoCache = currentPdfUrl + '#t=' + Date.now();
+            iframe.src = 'about:blank';
+            setTimeout(() => {
+                iframe.src = urlWithNoCache;
+                placeholder.classList.add('hidden');
+                iframe.classList.remove('hidden');
+            }, 10);
 
         } catch (err) {
             console.error('Preview error:', err);

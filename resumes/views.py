@@ -210,15 +210,15 @@ def preview_resume_pdf(request, resume_id):
     except Resume.DoesNotExist:
         return HttpResponse("Resume not found.", status=404)
     
-    latex_content = ''
+    latex_content = None
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            latex_content = data.get('latex_content', '')
-        except json.JSONDecodeError:
-            latex_content = request.POST.get('latex_content', '')
+            latex_content = data.get('latex_content')
+        except (json.JSONDecodeError, ValueError):
+            latex_content = request.POST.get('latex_content')
 
-    if not latex_content:
+    if latex_content is None:
         latex_content = resume.latex_content
 
     from templates_engine.compiler import compile_latex_to_pdf
