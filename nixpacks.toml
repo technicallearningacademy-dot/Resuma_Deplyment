@@ -1,8 +1,7 @@
 # Nixpacks configuration for Railway
-# Adds system-level dependencies needed by PyMuPDF and pdf2docx
 
 [phases.setup]
-nixPkgs = ["...", "gcc", "musl-dev", "libffi-dev", "mupdf"]
+nixPkgs = ["...", "gcc", "libffi", "mupdf"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
